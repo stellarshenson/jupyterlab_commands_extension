@@ -1,19 +1,20 @@
 # Changes here will be overwritten by Copier; NEVER EDIT MANUALLY
-_commit: v4.5.1
+_commit: v4.6.5
 _src_path: https://github.com/jupyterlab/extension-template
+advanced: false
 author_email: konrad.jelen@gmail.com
 author_name: Stellars Henson
 has_ai_rules: false
 has_binder: false
 has_settings: false
 kind: frontend
-labextension_name: jupyterlab_show_commands_reference_extension
+labextension_name: jupyterlab_commands_extension
 project_short_description: Jupyterlab custom command that opens a new tab where there
     is a long list of currently available commands with their full reference ( i.e.
     iframe:open ) along with the list of arguments - as extracted in realtime from
     the available commands some way. Page is supposed to serve the purpose of being
     reference help page for those who want to use the commands
-python_name: jupyterlab_show_commands_reference_extension
+python_name: jupyterlab_commands_extension
 repository: ''
 test: true
 

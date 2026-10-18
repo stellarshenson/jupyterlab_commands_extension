@@ -3,4 +3,7 @@ node_modules
 **/lib
 **/package.json
 !/package.json
-jupyterlab_show_commands_reference_extension
+jupyterlab_commands_extension
+eslint.config.mjs
+.venv
+graphify-out

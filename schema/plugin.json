@@ -1,0 +1,29 @@
+{
+  "title": "Commands Executor",
+  "description": "Settings of the commands reference tab and the command executor relay.",
+  "type": "object",
+  "properties": {
+    "allowedCommands": {
+      "type": "array",
+      "title": "Allowed commands",
+      "description": "Command IDs that the command executor may run. The Add to command executor button in the commands reference tab adds an ID to this list.",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "title": "Command ID",
+        "description": "ID of a command the executor may run"
+      },
+      "default": [
+        "docmanager:open",
+        "help:open",
+        "apputils:notify",
+        "notebook:create-new",
+        "console:create",
+        "terminal:create-new",
+        "launcher:create",
+        "jupyterlab-commands-reference:open"
+      ]
+    }
+  },
+  "additionalProperties": false
+}

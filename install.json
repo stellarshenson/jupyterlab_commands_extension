@@ -1,5 +1,5 @@
 {
   "packageManager": "python",
-  "packageName": "jupyterlab_show_commands_reference_extension",
-  "uninstallInstructions": "Use your Python package manager (pip, conda, etc.) to uninstall the package jupyterlab_show_commands_reference_extension"
+  "packageName": "jupyterlab_commands_extension",
+  "uninstallInstructions": "Use your Python package manager (pip, conda, etc.) to uninstall the package jupyterlab_commands_extension"
 }

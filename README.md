@@ -41,9 +41,15 @@ For a development install from a clone, run `make install`.
 
 ## Command line
 
-`jupyterlab-commands` runs in a terminal of the lab. It finds the running Jupyter server, selects the most recently registered browser tab with the extension active, and asks that tab to run one command. Requests travel over the loopback address and bypass any proxy. The token is sent in the Authorization header and is never printed.
+`jupyterlab-commands` runs in a terminal of the lab. It finds the running Jupyter server, selects the most recently registered browser tab with the extension active, and asks that tab to run one command. Discovery uses the loopback address by default, and loopback requests bypass any proxy. An explicit `--url` with `JUPYTERLAB_COMMANDS_TOKEN` set reaches a remote server. The token is sent in the Authorization header and is never printed.
+
+```bash
+JUPYTERLAB_COMMANDS_TOKEN=... jupyterlab-commands --url https://remote-host:8888 --list
+```
 
 `jupyterlab-commands --help` and `jupyterlab-commands <command> --help` hold the full reference. The two subcommands are `list`, which prints the allowed command IDs, and `execute`, which runs one allowed command. `--json` prints machine-readable output.
+
+Exit codes: 0 success, 2 discovery or usage error, 3 no browser client, 4 command not allowed, 5 execution error.
 
 The browser tab is the executor: the command runs in the lab, not in the terminal.
 
@@ -59,16 +65,16 @@ The reference tab opens from the command palette as **Show Commands Reference** 
 
 The agent skill at [`.agents/skills/jupyterlab-commands-extension/SKILL.md`](.agents/skills/jupyterlab-commands-extension/SKILL.md) tells an AI assistant to read `jupyterlab-commands --help` first and adds only the rules the help cannot enforce. The wheel installs a copy at `<sys.prefix>/share/jupyter/agents/skills/jupyterlab-commands-extension/SKILL.md`. No agent reads that directory, so link the copy where agents look.
 
-After `pip install`, with the Python that runs the lab:
+After `pip install`, with the Python that runs the lab, link the copy where Claude Code reads skills:
 
 ```bash
-mkdir -p ~/.agents/skills && ln -s "$(python -c 'import sys; print(sys.prefix)')/share/jupyter/agents/skills/jupyterlab-commands-extension" ~/.agents/skills/jupyterlab-commands-extension
+mkdir -p ~/.claude/skills && ln -s "$(python -c 'import sys; print(sys.prefix)')/share/jupyter/agents/skills/jupyterlab-commands-extension" ~/.claude/skills/jupyterlab-commands-extension
 ```
 
 From a clone:
 
 ```bash
-ln -s "$PWD/.agents/skills/jupyterlab-commands-extension" ~/.claude/skills/jupyterlab-commands-extension
+mkdir -p ~/.claude/skills && ln -s "$PWD/.agents/skills/jupyterlab-commands-extension" ~/.claude/skills/jupyterlab-commands-extension
 ```
 
 ## Uninstall

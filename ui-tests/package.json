@@ -1,7 +1,7 @@
 {
-  "name": "jupyterlab_show_commands_reference_extension-ui-tests",
+  "name": "jupyterlab_commands_extension-ui-tests",
   "version": "1.0.0",
-  "description": "JupyterLab jupyterlab_show_commands_reference_extension Integration Tests",
+  "description": "JupyterLab jupyterlab_commands_extension Integration Tests",
   "private": true,
   "scripts": {
     "start": "jupyter lab --config jupyter_server_test_config.py",
@@ -9,7 +9,7 @@
     "test:update": "jlpm playwright test --update-snapshots"
   },
   "devDependencies": {
-    "@jupyterlab/galata": "^5.0.5",
-    "@playwright/test": "^1.37.0"
+    "@jupyterlab/galata": "^5.6.0",
+    "@playwright/test": "^1.60.0"
   }
 }

@@ -1,31 +1,37 @@
 import { Widget } from '@lumino/widgets';
 import { CommandRegistry } from '@lumino/commands';
+import type { ISettingRegistry } from '@jupyterlab/settingregistry';
 
-/**
- * Interface for cached command information
- */
-interface ICommandInfo {
-  id: string;
-  label: string;
-  caption: string;
-  args: string | null;
-}
+import { addAllowedCommand, getAllowedCommands } from './allowlist';
+import { collectCommands, describeCommand, ICommandInfo } from './commands';
 
 /**
  * A widget that displays all registered JupyterLab commands
  */
 export class CommandsReferenceWidget extends Widget {
   private _commands: CommandRegistry;
+  private _settings: ISettingRegistry.ISettings | null;
+  private _registry: ISettingRegistry | null;
   private _searchInput!: HTMLInputElement;
   private _countSpan!: HTMLSpanElement;
   private _tbody!: HTMLTableSectionElement;
   private _commandsCache: ICommandInfo[] = [];
   private _argsCache: Map<string, string> = new Map();
 
-  constructor(commands: CommandRegistry) {
+  constructor(
+    commands: CommandRegistry,
+    settings: ISettingRegistry.ISettings | null = null,
+    registry: ISettingRegistry | null = null
+  ) {
     super();
     this._commands = commands;
+    this._settings = settings;
+    this._registry = registry;
     this.addClass('jp-CommandsReferenceWidget');
+
+    if (this._settings) {
+      this._settings.changed.connect(this._onSettingsChanged, this);
+    }
 
     // Build DOM structure
     this._buildHeader();
@@ -33,6 +39,23 @@ export class CommandsReferenceWidget extends Widget {
 
     // Initial load
     void this._loadCommands();
+  }
+
+  /**
+   * Dispose the widget and drop the settings listener.
+   */
+  dispose(): void {
+    if (this._settings) {
+      this._settings.changed.disconnect(this._onSettingsChanged, this);
+    }
+    super.dispose();
+  }
+
+  /**
+   * Reflect a settings change in the executor buttons.
+   */
+  private _onSettingsChanged(): void {
+    this._updateExecutorButtons();
   }
 
   /**
@@ -73,7 +96,13 @@ export class CommandsReferenceWidget extends Widget {
     // Table header
     const thead = document.createElement('thead');
     const headerRow = document.createElement('tr');
-    const headers = ['Command ID', 'Label', 'Description', 'Arguments'];
+    const headers = [
+      'Command ID',
+      'Label',
+      'Description',
+      'Arguments',
+      'Command Executor'
+    ];
     for (const headerText of headers) {
       const th = document.createElement('th');
       th.textContent = headerText;
@@ -97,36 +126,7 @@ export class CommandsReferenceWidget extends Widget {
     try {
       const commandIds = this._commands.listCommands();
       console.log(`Commands Reference: Found ${commandIds.length} commands`);
-      this._commandsCache = [];
-
-      for (const id of commandIds) {
-        let label = '';
-        let caption = '';
-
-        // Some commands have label/caption functions that may fail without args
-        try {
-          label = this._commands.label(id) || '';
-        } catch {
-          label = '';
-        }
-
-        try {
-          caption = this._commands.caption(id) || '';
-        } catch {
-          caption = '';
-        }
-
-        const info: ICommandInfo = {
-          id,
-          label,
-          caption,
-          args: null
-        };
-        this._commandsCache.push(info);
-      }
-
-      // Sort by command ID
-      this._commandsCache.sort((a, b) => a.id.localeCompare(b.id));
+      this._commandsCache = collectCommands(this._commands);
 
       // Render initial table
       this._renderTable(this._commandsCache);
@@ -150,18 +150,13 @@ export class CommandsReferenceWidget extends Widget {
 
       await Promise.all(
         batch.map(async cmd => {
-          try {
-            const description = await this._commands.describedBy(cmd.id);
-            if (description && description.args) {
-              const argsStr = this._formatArgs(description.args);
-              cmd.args = argsStr;
-              this._argsCache.set(cmd.id, argsStr);
+          const argsStr = await describeCommand(this._commands, cmd.id);
+          if (argsStr) {
+            cmd.args = argsStr;
+            this._argsCache.set(cmd.id, argsStr);
 
-              // Update the cell if visible
-              this._updateArgsCell(cmd.id, argsStr);
-            }
-          } catch {
-            // Command may not have describedBy implemented
+            // Update the cell if visible
+            this._updateArgsCell(cmd.id, argsStr);
           }
         })
       );
@@ -169,52 +164,6 @@ export class CommandsReferenceWidget extends Widget {
       // Yield to allow UI updates
       await new Promise(resolve => setTimeout(resolve, 0));
     }
-  }
-
-  /**
-   * Format arguments object as readable string
-   * Handles JSON Schema format: { type: "object", properties: { argName: { type: "string" } } }
-   */
-  private _formatArgs(args: unknown): string {
-    if (!args || typeof args !== 'object') {
-      return '';
-    }
-
-    const schema = args as Record<string, unknown>;
-
-    // JSON Schema format: extract from 'properties' object
-    if (schema.properties && typeof schema.properties === 'object') {
-      const properties = schema.properties as Record<string, unknown>;
-      const propKeys = Object.keys(properties);
-
-      if (propKeys.length === 0) {
-        return '';
-      }
-
-      const formatted = propKeys.map(key => {
-        const prop = properties[key];
-        if (prop && typeof prop === 'object') {
-          const propObj = prop as Record<string, unknown>;
-          const typeInfo = propObj.type;
-          if (typeInfo) {
-            return `${key}: ${typeInfo}`;
-          }
-        }
-        return key;
-      });
-
-      return formatted.join(', ');
-    }
-
-    // Fallback: direct key-value format (non-schema)
-    const keys = Object.keys(schema).filter(
-      k => k !== 'type' && k !== '$schema'
-    );
-    if (keys.length === 0) {
-      return '';
-    }
-
-    return keys.join(', ');
   }
 
   /**
@@ -241,7 +190,9 @@ export class CommandsReferenceWidget extends Widget {
    * Render the commands table
    */
   private _renderTable(commands: ICommandInfo[]): void {
-    this._tbody.innerHTML = '';
+    while (this._tbody.firstChild) {
+      this._tbody.removeChild(this._tbody.firstChild);
+    }
 
     for (const cmd of commands) {
       const row = document.createElement('tr');
@@ -272,6 +223,26 @@ export class CommandsReferenceWidget extends Widget {
       argsCell.title = cachedArgs || cmd.args || '';
       row.appendChild(argsCell);
 
+      // Executor cell
+      const executorCell = document.createElement('td');
+      executorCell.className = 'jp-CommandsReferenceWidget-executor';
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'jp-CommandsReferenceWidget-add';
+      button.dataset.commandId = cmd.id;
+      button.addEventListener('click', () => {
+        void this._addToExecutor(cmd.id, button);
+      });
+      if (this._isAllowed(cmd.id)) {
+        button.textContent = 'Added';
+        button.disabled = true;
+      } else {
+        button.textContent = 'Add to command executor';
+        button.disabled = !this._settings || !this._registry;
+      }
+      executorCell.appendChild(button);
+      row.appendChild(executorCell);
+
       this._tbody.appendChild(row);
     }
 
@@ -298,6 +269,53 @@ export class CommandsReferenceWidget extends Widget {
     });
 
     this._renderTable(filtered);
+  }
+
+  /**
+   * Whether a command ID is in the allowlist.
+   */
+  private _isAllowed(commandId: string): boolean {
+    return (
+      this._settings !== null &&
+      getAllowedCommands(this._settings).includes(commandId)
+    );
+  }
+
+  /**
+   * Add one command ID to the allowlist and show the Added state.
+   */
+  private async _addToExecutor(
+    commandId: string,
+    button: HTMLButtonElement
+  ): Promise<void> {
+    if (!this._settings || !this._registry) {
+      return;
+    }
+    button.disabled = true;
+    try {
+      await addAllowedCommand(this._settings, this._registry, commandId);
+      button.textContent = 'Added';
+    } catch (error) {
+      console.error('Commands Reference: cannot update allowedCommands', error);
+      button.textContent = 'Add to command executor';
+      button.disabled = false;
+    }
+  }
+
+  /**
+   * Set every executor button from the current allowlist.
+   */
+  private _updateExecutorButtons(): void {
+    const buttons = this._tbody.querySelectorAll<HTMLButtonElement>(
+      'button.jp-CommandsReferenceWidget-add'
+    );
+    for (const button of Array.from(buttons)) {
+      const commandId = button.dataset.commandId || '';
+      const allowed = this._isAllowed(commandId);
+      button.textContent = allowed ? 'Added' : 'Add to command executor';
+      button.disabled =
+        allowed || this._settings === null || this._registry === null;
+    }
   }
 
   /**
