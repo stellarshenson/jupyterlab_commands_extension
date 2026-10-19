@@ -1,6 +1,6 @@
 {
     "name": "jupyterlab_commands_extension",
-    "version": "1.0.16",
+    "version": "1.0.17",
     "description": "Display all available JupyterLab commands with their full reference IDs and arguments in a dedicated tab",
     "keywords": [
         "jupyter",
