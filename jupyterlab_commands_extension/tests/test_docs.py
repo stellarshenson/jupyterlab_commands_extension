@@ -1,4 +1,4 @@
-"""Check the facts ACC-DOCS-24 requires in the README."""
+"""Check the facts ACC-DOCS-24-README requires in the README."""
 
 from pathlib import Path
 

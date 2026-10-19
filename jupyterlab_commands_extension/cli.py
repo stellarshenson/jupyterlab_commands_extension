@@ -803,9 +803,11 @@ def _build_parser() -> argparse.ArgumentParser:
         description=(
             "Post the current time to the JupyterHub activity route as this "
             "server's last activity, the same write the single-user notifier "
-            "makes, so the hub does not cull the server as idle while work "
-            "runs. It needs no browser tab. The hub answers 200 even when the "
-            "time does not move, because the route never moves time "
+            "makes. One call marks the server active once; the hub culls it "
+            "as idle after its idle timeout counted from the last mark, so "
+            "while work runs, repeat the call at an interval shorter than "
+            "that timeout. It needs no browser tab. The hub answers 200 even "
+            "when the time does not move, because the route never moves time "
             "backwards. The hub token goes to JUPYTERHUB_ACTIVITY_URL only; "
             "--url and --token do not apply."
         ),

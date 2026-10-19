@@ -1,6 +1,6 @@
 ---
 name: jupyterlab-commands-extension
-description: Run an allowed JupyterLab command in a browser tab, through the `jupyterlab-commands` CLI of jupyterlab_commands_extension. Use when a task needs the running JupyterLab to open a file, create a notebook, console, terminal or launcher, show a notification, or run any command id the user has allowed, or "run a JupyterLab command".
+description: Run an allowed JupyterLab command in a browser tab, through the `jupyterlab-commands` CLI of jupyterlab_commands_extension. Use when a task needs the running JupyterLab to open a file, create a notebook, console, terminal or launcher, show a notification, or run any command id the user has allowed, or keep the JupyterHub session from being culled as idle while work runs (`activity`), or "run a JupyterLab command".
 ---
 
 # jupyterlab-commands
@@ -15,4 +15,4 @@ Commands, flags, output, exit codes: `jupyterlab-commands --help`, `jupyterlab-c
 - Run `jupyterlab-commands --list` before `execute`. The allowlist belongs to the browser tab; a command outside it fails with exit code 4
 - Ask the user before an action that cannot be undone, or that opens or edits their files. `execute` runs in their lab
 - Long output: pass `--json` and read the fields you need
-- `activity` keeps the user's hub session alive. Send it while work the user asked for is running, never in an unattended loop without the user's word
+- `activity` marks the server active once; the hub culls it after its idle timeout counted from the last mark. While work the user asked for runs, repeat it at an interval the user names, shorter than that timeout; never loop without the user's word

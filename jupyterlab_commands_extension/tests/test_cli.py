@@ -1031,7 +1031,8 @@ def test_help_names_variables_exit_codes_examples_and_flags(monkeypatch, capsys)
         if name == "activity":
             assert "JupyterHub activity route" in text
             assert "single-user notifier" in text
-            assert "cull the server as idle" in text
+            assert "marks the server active once" in text
+            assert "counted from the last mark" in text
             assert "no browser tab" in text
             assert "never moves time backwards" in text
             assert not re.search(

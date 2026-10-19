@@ -2,6 +2,18 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## [1.0.18] - 2026-10-20
+
+### Added
+
+- `jupyterlab-commands activity` marks the server active in JupyterHub: it posts the hub notifier body to `$JUPYTERHUB_ACTIVITY_URL` with the hub API token, so an agent in a terminal with no browser tab keeps the session from being culled as idle while work runs
+- Hub refusals (400, 403, 404) print the hub's own message; `--json` returns `{"ok": false, "status", "message"}`
+- The agent skill triggers on keeping the JupyterHub session from being culled as idle
+
+### Changed
+
+- Tracker ids carry a subject code, for example `ACC-CLI-32-ACTIVITY`
+
 ## [1.0.17] - 2026-10-19
 
 ### Fixed
