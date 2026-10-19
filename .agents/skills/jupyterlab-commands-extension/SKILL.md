@@ -15,3 +15,4 @@ Commands, flags, output, exit codes: `jupyterlab-commands --help`, `jupyterlab-c
 - Run `jupyterlab-commands --list` before `execute`. The allowlist belongs to the browser tab; a command outside it fails with exit code 4
 - Ask the user before an action that cannot be undone, or that opens or edits their files. `execute` runs in their lab
 - Long output: pass `--json` and read the fields you need
+- `activity` keeps the user's hub session alive. Send it while work the user asked for is running, never in an unattended loop without the user's word

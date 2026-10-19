@@ -3,6 +3,7 @@
 The CLI finds the Jupyter server this process belongs to, reads the allowlist
 of the most recently registered browser tab, and asks that tab to run one
 command. The token travels in the Authorization header and is never printed.
+The activity subcommand instead sends one activity timestamp to JupyterHub.
 """
 
 from __future__ import annotations
@@ -16,6 +17,7 @@ import subprocess
 import sys
 import urllib.error
 import urllib.request
+from datetime import datetime, timezone
 from http.client import HTTPException
 from pathlib import Path
 from typing import Any
@@ -69,6 +71,9 @@ Authentication:
   JUPYTERHUB_API_TOKEN, JPY_API_TOKEN and JUPYTER_TOKEN are used only for a
   loopback target, in that order. A matched server record's own token is used
   before those ambient variables.
+  activity sends the hub token, JUPYTERHUB_API_TOKEN then JPY_API_TOKEN, to
+  JUPYTERHUB_ACTIVITY_URL only. It never sends JUPYTERLAB_COMMANDS_TOKEN,
+  JUPYTER_TOKEN or --token, and refuses --url and --token.
   --token is kept for compatibility, but it puts the secret in argv where
   every local account can read /proc/<pid>/cmdline. Prefer
   JUPYTERLAB_COMMANDS_TOKEN. The token travels in the Authorization header
@@ -78,11 +83,14 @@ Authentication:
 Environment variables:
   JUPYTERLAB_COMMANDS_TOKEN  token for any target, checked first
   JUPYTERHUB_API_TOKEN, JPY_API_TOKEN, JUPYTER_TOKEN
-                             loopback targets only, in that order
+                             lab targets on loopback only, in that order
   JUPYTERHUB_SERVICE_PREFIX  names this process's own server, so it selects
                              among several listed records, and supplies the
                              base path when no record is listed
   JUPYTER_PORT               port used when no record is listed (default 8888)
+  JUPYTERHUB_ACTIVITY_URL    hub activity route that activity posts to
+  JUPYTERHUB_SERVER_NAME     server name activity reports (empty for the
+                             default server)
 
 Exit codes:
   0  success
@@ -106,6 +114,19 @@ Examples:
   jupyterlab-commands execute apputils:notify --args-file notify.json --json
   JUPYTERLAB_COMMANDS_TOKEN=... jupyterlab-commands execute docmanager:open \\
       --url https://remote-host:8888 --args '{"path": "README.md"}'
+"""
+
+ACTIVITY_EPILOG = """\
+Request:
+  POST $JUPYTERHUB_ACTIVITY_URL, the JupyterHub activity route
+  {JUPYTERHUB_API_URL}/users/{user}/activity, with the body
+  {"last_activity": TS, "servers": {JUPYTERHUB_SERVER_NAME: {"last_activity": TS}}}
+  where TS is the current UTC time ending in Z. A hub refusal (HTTP 400, 403
+  or 404) prints the hub message and exits 5.
+
+Examples:
+  jupyterlab-commands activity
+  jupyterlab-commands activity --json
 """
 
 
@@ -524,6 +545,109 @@ def _post(
     return answer
 
 
+def _run_activity(args: argparse.Namespace) -> int:
+    """Send one activity timestamp to JupyterHub, as the hub notifier does."""
+    # --url and --token name the lab; a lab token must never reach the hub.
+    if args.url or args.token:
+        raise CliError(
+            "--url and --token name the lab target and do not apply to activity, "
+            "which sends the hub token to JUPYTERHUB_ACTIVITY_URL only",
+            EXIT_USAGE,
+        )
+    url = os.environ.get("JUPYTERHUB_ACTIVITY_URL")
+    token = os.environ.get("JUPYTERHUB_API_TOKEN") or os.environ.get("JPY_API_TOKEN")
+    if not url or not token:
+        missing = (
+            "JUPYTERHUB_ACTIVITY_URL"
+            if not url
+            else "JUPYTERHUB_API_TOKEN or JPY_API_TOKEN"
+        )
+        raise CliError(
+            f"{missing} is not set; activity runs only in a lab started by "
+            "JupyterHub",
+            EXIT_USAGE,
+        )
+    server = os.environ.get("JUPYTERHUB_SERVER_NAME", "")
+    # The form jupyterhub.utils.isoformat produces: naive UTC with a Z suffix.
+    timestamp = datetime.now(timezone.utc).replace(tzinfo=None).isoformat() + "Z"
+    payload = {
+        "servers": {server: {"last_activity": timestamp}},
+        "last_activity": timestamp,
+    }
+    # The hub notifier ignores proxy variables, and the token must reach only
+    # the hub, so the request takes no proxy and follows no redirect.
+    opener = urllib.request.build_opener(
+        urllib.request.ProxyHandler({}), _NoRedirect()
+    )
+    try:
+        request = urllib.request.Request(
+            url,
+            data=json.dumps(payload).encode("utf-8"),
+            headers={
+                "Authorization": f"token {token}",
+                "Content-Type": "application/json",
+            },
+            method="POST",
+        )
+        with opener.open(request, timeout=REQUEST_TIMEOUT_S):
+            pass
+    except urllib.error.HTTPError as error:
+        try:
+            raw = error.read()
+        except (HTTPException, OSError):
+            raw = b""
+        # Only a JSON message is printed; an HTML error page never is.
+        _, reason = _error_details(raw)
+        status = error.code
+        if status in (400, 403, 404) and reason:
+            message = reason
+        else:
+            message = f"HTTP {status} {error.reason} from {url}"
+            if reason:
+                message += f": {reason}"
+        return _activity_refused(args, status, message)
+    except TimeoutError:
+        raise CliError(
+            f"no answer from {url} within {REQUEST_TIMEOUT_S}s", EXIT_USAGE
+        ) from None
+    except urllib.error.URLError as error:
+        raise CliError(f"cannot reach {url}: {error.reason}", EXIT_USAGE) from None
+    except (HTTPException, OSError) as error:
+        raise CliError(
+            f"connection to {url} failed before a usable answer arrived "
+            f"({error!r})",
+            EXIT_USAGE,
+        ) from None
+    except ValueError:
+        # The exception text of a refused header quotes the token.
+        raise CliError(
+            "the token or URL contains characters an HTTP header cannot carry",
+            EXIT_USAGE,
+        ) from None
+    if args.json:
+        print(
+            json.dumps(
+                {"ok": True, "last_activity": timestamp, "server": server},
+                sort_keys=True,
+            )
+        )
+    else:
+        print(f"sent hub activity last_activity={timestamp}")
+    return EXIT_OK
+
+
+def _activity_refused(args: argparse.Namespace, status: int, message: str) -> int:
+    """Report a hub refusal of activity and return the execution exit code."""
+    if not args.json:
+        raise CliError(message, EXIT_EXECUTION)
+    print(
+        json.dumps(
+            {"ok": False, "status": status, "message": message}, sort_keys=True
+        )
+    )
+    return EXIT_EXECUTION
+
+
 def _read_arguments(args: argparse.Namespace) -> dict[str, Any]:
     """Read --args or --args-file and parse one JSON object."""
     if args.args_file:
@@ -672,6 +796,22 @@ def _build_parser() -> argparse.ArgumentParser:
     source.add_argument(
         "--args-file", help="file holding the command arguments as one JSON object"
     )
+    subparsers.add_parser(
+        "activity",
+        parents=[common],
+        help="post the current time to the JupyterHub activity route",
+        description=(
+            "Post the current time to the JupyterHub activity route as this "
+            "server's last activity, the same write the single-user notifier "
+            "makes, so the hub does not cull the server as idle while work "
+            "runs. It needs no browser tab. The hub answers 200 even when the "
+            "time does not move, because the route never moves time "
+            "backwards. The hub token goes to JUPYTERHUB_ACTIVITY_URL only; "
+            "--url and --token do not apply."
+        ),
+        epilog=ACTIVITY_EPILOG,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
     return parser
 
 
@@ -680,14 +820,17 @@ def main(argv: list[str] | None = None) -> int:
     parser = _build_parser()
     args = parser.parse_args(argv)
     try:
-        if args.list and args.subcommand == "execute":
+        if args.list and args.subcommand in ("execute", "activity"):
             raise CliError(
-                "--list cannot be combined with the execute subcommand", EXIT_USAGE
+                f"--list cannot be combined with the {args.subcommand} subcommand",
+                EXIT_USAGE,
             )
         if args.list or args.subcommand == "list":
             return _run_list(args)
         if args.subcommand == "execute":
             return _run_execute(args)
+        if args.subcommand == "activity":
+            return _run_activity(args)
         parser.print_help()
         return EXIT_USAGE
     except CliError as error:

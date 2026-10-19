@@ -7,9 +7,11 @@ No live Jupyter server is used. Server discovery is exercised with a fake
 import argparse
 import json
 import os
+import re
 import socket
 import threading
 import urllib.request
+from datetime import datetime
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 import pytest
@@ -24,6 +26,8 @@ ENVIRONMENT_VARIABLES = (
     "JUPYTER_PORT",
     "JUPYTERHUB_SERVICE_PREFIX",
     "JUPYTERHUB_SERVICE_URL",
+    "JUPYTERHUB_ACTIVITY_URL",
+    "JUPYTERHUB_SERVER_NAME",
 )
 
 
@@ -62,18 +66,25 @@ class _StubHandler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         length = int(self.headers.get("Content-Length", "0"))
-        body = json.loads(self.rfile.read(length) or b"{}")
+        raw = self.rfile.read(length)
+        body = json.loads(raw or b"{}")
         self.server.requests.append(
             {
+                "method": "POST",
                 "path": self.path,
                 "authorization": self.headers.get("Authorization"),
                 "body": body,
+                "raw": raw,
             }
         )
         status, payload = self.server.responder(self.path, body)
-        data = json.dumps(payload).encode("utf-8")
+        # A bytes payload stands for a non-JSON page, such as an HTML error.
+        if isinstance(payload, bytes):
+            data, content_type = payload, "text/html"
+        else:
+            data, content_type = json.dumps(payload).encode("utf-8"), "application/json"
         self.send_response(status)
-        self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Type", content_type)
         self.send_header("Content-Length", str(len(data)))
         if self.server.location:
             self.send_header("Location", self.server.location)
@@ -979,6 +990,15 @@ def test_help_names_variables_exit_codes_examples_and_flags(monkeypatch, capsys)
         "JUPYTER_PORT",
     ):
         assert name in top
+    for name in (
+        "JUPYTERHUB_ACTIVITY_URL",
+        "JUPYTERHUB_SERVER_NAME",
+        "JUPYTERHUB_API_TOKEN then JPY_API_TOKEN",
+    ):
+        assert name in top
+    assert "post the current time to the JupyterHub activity route" in top
+    assert not re.search(r"keep.?alive|register.?activity", top, re.IGNORECASE)
+    assert "JUPYTERHUB_USER" not in top
     for line in (
         "0  success",
         "2  discovery or usage error",
@@ -1008,3 +1028,288 @@ def test_help_names_variables_exit_codes_examples_and_flags(monkeypatch, capsys)
         text = capsys.readouterr().out
         assert "Examples:" in text
         assert "jupyterlab-commands" in text.split("Examples:", 1)[1]
+        if name == "activity":
+            assert "JupyterHub activity route" in text
+            assert "single-user notifier" in text
+            assert "cull the server as idle" in text
+            assert "no browser tab" in text
+            assert "never moves time backwards" in text
+            assert not re.search(
+                r"keep.?alive|register.?activity", text, re.IGNORECASE
+            )
+            assert "JUPYTERHUB_USER" not in text
+            assert "jupyterlab-commands activity" in text.split("Examples:", 1)[1]
+
+
+HUB_TOKEN = "HUB-SECRET-token-123"
+ACTIVITY_PATH = "/hub/api/users/alice/activity"
+NO_SUCH_SERVER = "No such server '' for user alice"
+
+
+def _hub_environment(monkeypatch, stub, token_variable="JUPYTERHUB_API_TOKEN"):
+    monkeypatch.setenv("JUPYTERHUB_ACTIVITY_URL", _base_url(stub) + ACTIVITY_PATH)
+    monkeypatch.setenv(token_variable, HUB_TOKEN)
+    # The hub answers the activity route with 200 and an empty body.
+    stub.responder = lambda path, body: (200, b"")
+
+
+def _assert_no_hub_token(captured):
+    assert HUB_TOKEN not in captured.out
+    assert HUB_TOKEN not in captured.err
+
+
+@pytest.mark.parametrize("server_name", [None, "gpu"])
+@pytest.mark.parametrize("token_variable", ["JUPYTERHUB_API_TOKEN", "JPY_API_TOKEN"])
+def test_activity_posts_one_hub_activity_tick(
+    stub, monkeypatch, capsys, server_name, token_variable
+):
+    _hub_environment(monkeypatch, stub, token_variable)
+    # Lab tokens present in the environment must never reach the hub.
+    monkeypatch.setenv("JUPYTER_TOKEN", "lab-token")
+    monkeypatch.setenv("JUPYTERLAB_COMMANDS_TOKEN", "dedicated-token")
+    if server_name is not None:
+        monkeypatch.setenv("JUPYTERHUB_SERVER_NAME", server_name)
+
+    code = cli.main(["activity"])
+
+    captured = capsys.readouterr()
+    assert code == cli.EXIT_OK
+    assert len(stub.requests) == 1
+    request = stub.requests[0]
+    assert request["method"] == "POST"
+    assert request["path"] == ACTIVITY_PATH
+    assert request["authorization"] == f"token {HUB_TOKEN}"
+    body = request["body"]
+    expected_server = server_name or ""
+    assert list(body["servers"]) == [expected_server]
+    timestamp = body["last_activity"]
+    assert body["servers"][expected_server]["last_activity"] == timestamp
+    assert timestamp.endswith("Z")
+    datetime.fromisoformat(timestamp[:-1])
+    assert timestamp in captured.out
+    assert len(captured.out.splitlines()) == 1
+    _assert_no_hub_token(captured)
+
+
+def test_activity_json_prints_the_sent_timestamp_and_server(
+    stub, monkeypatch, capsys
+):
+    _hub_environment(monkeypatch, stub)
+
+    code = cli.main(["activity", "--json"])
+
+    captured = capsys.readouterr()
+    assert code == cli.EXIT_OK
+    assert json.loads(captured.out) == {
+        "ok": True,
+        "last_activity": stub.requests[0]["body"]["last_activity"],
+        "server": "",
+    }
+    _assert_no_hub_token(captured)
+
+
+def test_activity_bypasses_the_proxy(stub, monkeypatch, capsys):
+    proxy = _StubServer()
+    proxy_thread = threading.Thread(target=proxy.serve_forever, daemon=True)
+    proxy_thread.start()
+    try:
+        _hub_environment(monkeypatch, stub)
+        proxy_url = f"http://127.0.0.1:{proxy.server_address[1]}"
+        monkeypatch.setenv("http_proxy", proxy_url)
+        monkeypatch.setenv("HTTP_PROXY", proxy_url)
+        monkeypatch.delenv("no_proxy", raising=False)
+        monkeypatch.delenv("NO_PROXY", raising=False)
+
+        code = cli.main(["activity"])
+
+        assert code == cli.EXIT_OK
+        assert stub.requests[0]["path"] == ACTIVITY_PATH
+        assert proxy.requests == []
+        _assert_no_hub_token(capsys.readouterr())
+    finally:
+        proxy.shutdown()
+        proxy.server_close()
+        proxy_thread.join(timeout=5)
+
+
+def test_activity_refuses_a_redirect(stub, monkeypatch, capsys):
+    target = _StubServer()
+    target_thread = threading.Thread(target=target.serve_forever, daemon=True)
+    target_thread.start()
+    try:
+        _hub_environment(monkeypatch, stub)
+        stub.location = f"http://127.0.0.1:{target.server_address[1]}/elsewhere"
+        stub.responder = lambda path, body: (302, {})
+
+        code = cli.main(["activity"])
+
+        assert code != cli.EXIT_OK
+        assert code == cli.EXIT_EXECUTION
+        assert target.requests == []
+        _assert_no_hub_token(capsys.readouterr())
+    finally:
+        target.shutdown()
+        target.server_close()
+        target_thread.join(timeout=5)
+
+
+@pytest.mark.parametrize("missing", ["JUPYTERHUB_ACTIVITY_URL", "token"])
+def test_activity_outside_a_hub_lab_exits_2(stub, monkeypatch, capsys, missing):
+    _hub_environment(monkeypatch, stub)
+    if missing == "token":
+        monkeypatch.delenv("JUPYTERHUB_API_TOKEN")
+        # Lab tokens are not hub tokens and must not stand in for one.
+        monkeypatch.setenv("JUPYTER_TOKEN", "lab-token")
+        monkeypatch.setenv("JUPYTERLAB_COMMANDS_TOKEN", "dedicated-token")
+    else:
+        monkeypatch.delenv(missing)
+
+    code = cli.main(["activity"])
+
+    captured = capsys.readouterr()
+    assert code == cli.EXIT_USAGE
+    assert "lab started by JupyterHub" in captured.err
+    if missing == "token":
+        assert "JUPYTERHUB_API_TOKEN or JPY_API_TOKEN is not set" in captured.err
+    else:
+        assert f"{missing} is not set" in captured.err
+    assert stub.requests == []
+    _assert_no_hub_token(captured)
+
+
+@pytest.mark.parametrize(
+    ("status", "message"),
+    [
+        (400, NO_SUCH_SERVER),
+        (
+            403,
+            "Action is not authorized with current scopes; requires "
+            "users:activity!user=alice",
+        ),
+        (404, "No such user: 'alice'"),
+    ],
+)
+def test_activity_refusal_prints_the_hub_message(
+    stub, monkeypatch, capsys, status, message
+):
+    _hub_environment(monkeypatch, stub)
+    stub.responder = lambda path, body: (
+        status,
+        {"status": status, "message": message},
+    )
+
+    code = cli.main(["activity"])
+
+    captured = capsys.readouterr()
+    assert code == cli.EXIT_EXECUTION
+    assert captured.out == ""
+    assert captured.err == f"jupyterlab-commands: {message}\n"
+    assert len(stub.requests) == 1
+    _assert_no_hub_token(captured)
+
+
+def test_activity_json_refusal_prints_status_and_hub_message(
+    stub, monkeypatch, capsys
+):
+    _hub_environment(monkeypatch, stub)
+    stub.responder = lambda path, body: (
+        400,
+        {"status": 400, "message": NO_SUCH_SERVER},
+    )
+
+    code = cli.main(["activity", "--json"])
+
+    captured = capsys.readouterr()
+    assert code == cli.EXIT_EXECUTION
+    assert json.loads(captured.out) == {
+        "ok": False,
+        "status": 400,
+        "message": NO_SUCH_SERVER,
+    }
+    _assert_no_hub_token(captured)
+
+
+def test_activity_html_error_page_is_not_printed(stub, monkeypatch, capsys):
+    _hub_environment(monkeypatch, stub)
+    page = b"<!DOCTYPE html><html><body><h1>403 Forbidden</h1></body></html>"
+    stub.responder = lambda path, body: (403, page)
+
+    code = cli.main(["activity"])
+
+    captured = capsys.readouterr()
+    assert code == cli.EXIT_EXECUTION
+    assert "HTTP 403 Forbidden" in captured.err
+    assert "<" not in captured.err
+    assert "<" not in captured.out
+    _assert_no_hub_token(captured)
+
+
+def test_activity_reports_another_hub_error_with_status_and_message(
+    stub, monkeypatch, capsys
+):
+    _hub_environment(monkeypatch, stub)
+    stub.responder = lambda path, body: (
+        500,
+        {"status": 500, "message": "database is locked"},
+    )
+
+    code = cli.main(["activity"])
+
+    captured = capsys.readouterr()
+    assert code == cli.EXIT_EXECUTION
+    assert "HTTP 500" in captured.err
+    assert "database is locked" in captured.err
+    assert len(stub.requests) == 1
+    _assert_no_hub_token(captured)
+
+
+def test_activity_with_an_unreachable_hub_exits_2(monkeypatch, capsys):
+    # Port 9 on loopback is closed, so the connection is refused.
+    monkeypatch.setenv("JUPYTERHUB_ACTIVITY_URL", "http://127.0.0.1:9" + ACTIVITY_PATH)
+    monkeypatch.setenv("JUPYTERHUB_API_TOKEN", HUB_TOKEN)
+
+    code = cli.main(["activity"])
+
+    captured = capsys.readouterr()
+    assert code == cli.EXIT_USAGE
+    assert "cannot reach" in captured.err
+    _assert_no_hub_token(captured)
+
+
+@pytest.mark.parametrize(
+    "argv",
+    [
+        ["activity", "--token", "lab-token"],
+        ["--token", "lab-token", "activity"],
+        ["activity", "--url", "http://127.0.0.1:9"],
+        ["--url", "http://127.0.0.1:9", "activity"],
+    ],
+)
+def test_activity_refuses_the_lab_url_and_token(stub, monkeypatch, capsys, argv):
+    _hub_environment(monkeypatch, stub)
+
+    code = cli.main(argv)
+
+    captured = capsys.readouterr()
+    assert code == cli.EXIT_USAGE
+    assert "do not apply to activity" in captured.err
+    assert stub.requests == []
+    assert "lab-token" not in captured.err
+    _assert_no_hub_token(captured)
+
+
+def test_activity_with_a_token_a_header_cannot_carry_exits_2(
+    stub, monkeypatch, capsys
+):
+    token = "hub-token\nsecond-part"
+    _hub_environment(monkeypatch, stub)
+    monkeypatch.setenv("JUPYTERHUB_API_TOKEN", token)
+
+    code = cli.main(["activity"])
+
+    captured = capsys.readouterr()
+    assert code == cli.EXIT_USAGE
+    assert "header" in captured.err
+    for part in token.split():
+        assert part not in captured.err
+    assert stub.requests == []

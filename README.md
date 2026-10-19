@@ -47,7 +47,13 @@ For a development install from a clone, run `make install`.
 JUPYTERLAB_COMMANDS_TOKEN=... jupyterlab-commands --url https://remote-host:8888 --list
 ```
 
-`jupyterlab-commands --help` and `jupyterlab-commands <command> --help` hold the full reference. The two subcommands are `list`, which prints the allowed command IDs, and `execute`, which runs one allowed command. `--json` prints machine-readable output.
+`jupyterlab-commands --help` and `jupyterlab-commands <command> --help` hold the full reference. The three subcommands are `list`, which prints the allowed command IDs, `execute`, which runs one allowed command, and `activity`. `--json` prints machine-readable output.
+
+`activity` posts the current time to the JupyterHub activity route, the same write the single-user notifier makes, so the hub does not cull the server as idle while work runs in a terminal. It needs no browser tab, but it runs only in a lab started by JupyterHub: it posts `{"last_activity": TS, "servers": {JUPYTERHUB_SERVER_NAME: {"last_activity": TS}}}` to `JUPYTERHUB_ACTIVITY_URL` with the hub token from `JUPYTERHUB_API_TOKEN` or `JPY_API_TOKEN`, through no proxy and no redirect. The hub answers 200 even when the time does not move, because the route never moves time backwards. A hub refusal prints the hub message and exits 5. `--url` and `--token` do not apply to it.
+
+```bash
+jupyterlab-commands activity
+```
 
 Exit codes: 0 success, 2 discovery or usage error, 3 no browser client, 4 command not allowed, 5 execution error.
 
