@@ -2,6 +2,12 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## [1.0.17] - 2026-10-19
+
+### Fixed
+
+- The source distribution no longer includes the internal `tmp/` workflow files that 1.0.16 shipped; the wheel was not affected
+
 ## [1.0.16] - 2026-10-18
 
 ### Added
