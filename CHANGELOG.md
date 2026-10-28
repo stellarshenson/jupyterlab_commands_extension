@@ -2,6 +2,12 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## [1.1.4] - 2026-10-28
+
+### Changed
+
+- No functional change; the patch release re-publishes the 1.1.3 content with refreshed package metadata
+
 ## [1.1.3] - 2026-10-28
 
 ### Added
