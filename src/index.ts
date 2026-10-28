@@ -7,10 +7,13 @@ import { ICommandPalette, MainAreaWidget } from '@jupyterlab/apputils';
 
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
 
+import { ITranslator, nullTranslator } from '@jupyterlab/translation';
+
 import { textEditorIcon } from '@jupyterlab/ui-components';
 
+// eslint-disable-next-line jupyter/prefer-lazy-imports -- the relay must start with the plugin: the CLI reaches this tab only through it
 import { RelayClient } from './relay';
-import { CommandsReferenceWidget } from './widget';
+import type { CommandsReferenceWidget } from './widget';
 
 /**
  * Command IDs for the extension
@@ -43,12 +46,17 @@ const plugin: JupyterFrontEndPlugin<void> = {
   description:
     'Display all available JupyterLab commands with their full reference IDs and arguments in a dedicated tab',
   autoStart: true,
-  requires: [ICommandPalette, ISettingRegistry],
+  requires: [ICommandPalette, ISettingRegistry, ITranslator],
   activate: async (
     app: JupyterFrontEnd,
     palette: ICommandPalette,
-    settingRegistry: ISettingRegistry
+    settingRegistry: ISettingRegistry,
+    translator: ITranslator | null
   ) => {
+    const trans = (translator ?? nullTranslator).load(
+      'jupyterlab_commands_extension'
+    );
+
     console.log(
       'JupyterLab extension jupyterlab_commands_extension is activated!'
     );
@@ -65,20 +73,24 @@ const plugin: JupyterFrontEndPlugin<void> = {
 
     // Register the command
     app.commands.addCommand(CommandIDs.open, {
-      label: 'Show Commands Reference',
-      caption:
-        'Display all available JupyterLab commands with their IDs and arguments',
-      execute: () => {
+      label: trans.__('Show Commands Reference'),
+      caption: trans.__(
+        'Display all available JupyterLab commands with their IDs and arguments'
+      ),
+      describedBy: () => ({}),
+      execute: async () => {
         // Create widget if it doesn't exist or was disposed
         if (!widget || widget.isDisposed) {
+          const { CommandsReferenceWidget } = await import('./widget');
           const content = new CommandsReferenceWidget(
             app.commands,
             settings,
-            settingRegistry
+            settingRegistry,
+            trans
           );
           widget = new MainAreaWidget({ content });
           widget.id = 'jp-commands-reference';
-          widget.title.label = 'Commands Reference';
+          widget.title.label = trans.__('Commands Reference');
           widget.title.icon = textEditorIcon;
           widget.title.closable = true;
 
@@ -101,14 +113,16 @@ const plugin: JupyterFrontEndPlugin<void> = {
     // Add command to palette under Help category
     palette.addItem({
       command: CommandIDs.open,
-      category: 'Help'
+      category: trans.__('Help')
     });
 
     // Download a file the contents API serves to the computer that runs
     // the browser tab.
     app.commands.addCommand(CommandIDs.download, {
-      label: 'Download File',
-      caption: 'Download a file from the server to the local computer',
+      label: trans.__('Download File'),
+      caption: trans.__(
+        'Download a file from the server to the local computer'
+      ),
       describedBy: () => ({
         args: {
           type: 'object',

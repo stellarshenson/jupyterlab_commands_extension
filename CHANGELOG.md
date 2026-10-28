@@ -2,6 +2,17 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## [1.1.5] - 2026-10-28
+
+### Changed
+
+- Every user-facing string passes through the JupyterLab translation bundle: command labels and captions, the palette category, the tab title, the table headers, the filter placeholder and the executor buttons; `@jupyterlab/translation` joins the runtime dependencies
+- The Commands Reference widget loads when the tab is first opened instead of at application start, and the relay builds its URLs from the server connection settings
+
+### Fixed
+
+- `jlpm run lint:check` reports no warnings; the 17 eslint warnings the sources carried are cleared
+
 ## [1.1.4] - 2026-10-28
 
 ### Changed

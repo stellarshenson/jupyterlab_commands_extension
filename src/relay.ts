@@ -1,5 +1,5 @@
 import type { JupyterFrontEnd } from '@jupyterlab/application';
-import { PageConfig, URLExt } from '@jupyterlab/coreutils';
+import { URLExt } from '@jupyterlab/coreutils';
 import { ServerConnection } from '@jupyterlab/services';
 import type { ISettingRegistry } from '@jupyterlab/settingregistry';
 import type { CommandRegistry } from '@lumino/commands';
@@ -260,7 +260,12 @@ export class RelayClient {
    * Build the URL of one relay endpoint.
    */
   private _url(endpoint: string): string {
-    return URLExt.join(PageConfig.getBaseUrl(), API_NAMESPACE, 'api', endpoint);
+    return URLExt.join(
+      this._serverSettings.baseUrl,
+      API_NAMESPACE,
+      'api',
+      endpoint
+    );
   }
 
   private _get(endpoint: string): Promise<any> {

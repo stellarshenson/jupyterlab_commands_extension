@@ -1,6 +1,8 @@
 import { Widget } from '@lumino/widgets';
 import { CommandRegistry } from '@lumino/commands';
 import type { ISettingRegistry } from '@jupyterlab/settingregistry';
+import { nullTranslator } from '@jupyterlab/translation';
+import type { TranslationBundle } from '@jupyterlab/translation';
 
 import { addAllowedCommand, getAllowedCommands } from './allowlist';
 import { collectCommands, describeCommand, ICommandInfo } from './commands';
@@ -17,16 +19,21 @@ export class CommandsReferenceWidget extends Widget {
   private _tbody!: HTMLTableSectionElement;
   private _commandsCache: ICommandInfo[] = [];
   private _argsCache: Map<string, string> = new Map();
+  private _trans: TranslationBundle;
 
   constructor(
     commands: CommandRegistry,
     settings: ISettingRegistry.ISettings | null = null,
-    registry: ISettingRegistry | null = null
+    registry: ISettingRegistry | null = null,
+    trans: TranslationBundle = nullTranslator.load(
+      'jupyterlab_commands_extension'
+    )
   ) {
     super();
     this._commands = commands;
     this._settings = settings;
     this._registry = registry;
+    this._trans = trans;
     this.addClass('jp-CommandsReferenceWidget');
 
     if (this._settings) {
@@ -68,7 +75,7 @@ export class CommandsReferenceWidget extends Widget {
     // Search input
     this._searchInput = document.createElement('input');
     this._searchInput.type = 'text';
-    this._searchInput.placeholder = 'Filter commands...';
+    this._searchInput.placeholder = this._trans.__('Filter commands...');
     this._searchInput.className =
       'jp-CommandsReferenceWidget-search jp-mod-styled';
     this._searchInput.addEventListener('input', () => {
@@ -98,11 +105,11 @@ export class CommandsReferenceWidget extends Widget {
     const thead = document.createElement('thead');
     const headerRow = document.createElement('tr');
     const headers = [
-      'Command ID',
-      'Label',
-      'Description',
-      'Arguments',
-      'Command Executor'
+      this._trans.__('Command ID'),
+      this._trans.__('Label'),
+      this._trans.__('Description'),
+      this._trans.__('Arguments'),
+      this._trans.__('Command Executor')
     ];
     for (const headerText of headers) {
       const th = document.createElement('th');
@@ -235,10 +242,10 @@ export class CommandsReferenceWidget extends Widget {
         void this._addToExecutor(cmd.id, button);
       });
       if (this._isAllowed(cmd.id)) {
-        button.textContent = 'Added';
+        button.textContent = this._trans.__('Added');
         button.disabled = true;
       } else {
-        button.textContent = 'Add to command executor';
+        button.textContent = this._trans.__('Add to command executor');
         button.disabled = !this._settings || !this._registry;
       }
       executorCell.appendChild(button);
@@ -295,10 +302,10 @@ export class CommandsReferenceWidget extends Widget {
     button.disabled = true;
     try {
       await addAllowedCommand(this._settings, this._registry, commandId);
-      button.textContent = 'Added';
+      button.textContent = this._trans.__('Added');
     } catch (error) {
       console.error('Commands Reference: cannot update allowedCommands', error);
-      button.textContent = 'Add to command executor';
+      button.textContent = this._trans.__('Add to command executor');
       button.disabled = false;
     }
   }
@@ -313,7 +320,9 @@ export class CommandsReferenceWidget extends Widget {
     for (const button of Array.from(buttons)) {
       const commandId = button.dataset.commandId || '';
       const allowed = this._isAllowed(commandId);
-      button.textContent = allowed ? 'Added' : 'Add to command executor';
+      button.textContent = allowed
+        ? this._trans.__('Added')
+        : this._trans.__('Add to command executor');
       button.disabled =
         allowed || this._settings === null || this._registry === null;
     }
