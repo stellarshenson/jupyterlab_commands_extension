@@ -21,7 +21,8 @@
         "console:create",
         "terminal:create-new",
         "launcher:create",
-        "jupyterlab-commands-reference:open"
+        "jupyterlab-commands-reference:open",
+        "file:download"
       ]
     }
   },

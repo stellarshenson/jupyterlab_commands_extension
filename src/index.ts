@@ -17,6 +17,7 @@ import { CommandsReferenceWidget } from './widget';
  */
 namespace CommandIDs {
   export const open = 'jupyterlab-commands-reference:open';
+  export const download = 'file:download';
 }
 
 /**
@@ -101,6 +102,46 @@ const plugin: JupyterFrontEndPlugin<void> = {
     palette.addItem({
       command: CommandIDs.open,
       category: 'Help'
+    });
+
+    // Download a file the contents API serves to the computer that runs
+    // the browser tab.
+    app.commands.addCommand(CommandIDs.download, {
+      label: 'Download File',
+      caption: 'Download a file from the server to the local computer',
+      describedBy: () => ({
+        args: {
+          type: 'object',
+          properties: {
+            path: {
+              type: 'string',
+              description: 'the file path relative to the server root'
+            }
+          },
+          required: ['path']
+        }
+      }),
+      execute: async args => {
+        const path = typeof args.path === 'string' ? args.path : '';
+        if (!path) {
+          throw new Error('file:download requires a non-empty path argument');
+        }
+        const model = await app.serviceManager.contents.get(path, {
+          content: false
+        });
+        if (model.type === 'directory') {
+          throw new Error(`file:download refuses a directory: ${path}`);
+        }
+        const url = await app.serviceManager.contents.getDownloadUrl(
+          model.path
+        );
+        const element = document.createElement('a');
+        element.href = url;
+        element.download = '';
+        document.body.appendChild(element);
+        element.click();
+        document.body.removeChild(element);
+      }
     });
 
     if (settings) {

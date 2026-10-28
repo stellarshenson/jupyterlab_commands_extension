@@ -24,7 +24,8 @@ const DEFAULT_ALLOWED = [
   'console:create',
   'terminal:create-new',
   'launcher:create',
-  'jupyterlab-commands-reference:open'
+  'jupyterlab-commands-reference:open',
+  'file:download'
 ];
 
 /** Every variable that could let discovery reach the developer's own lab. */
@@ -224,6 +225,67 @@ test('execute runs an allowed command and refuses one outside the allowlist', as
   expect(refused.stderr).toContain('not in the browser allowlist');
   // The refusal names the address the CLI resolved, not just an error code.
   expect(refused.stderr).toContain(`from ${BASE_URL}`);
+});
+
+test('file:download downloads a file and reports a missing path', async ({
+  page
+}) => {
+  // Fails if file:download stops starting the browser download of a file the
+  // contents API serves, or if a missing path exits with anything but the
+  // command-failure code and an error.
+  const env = isolatedEnvironment();
+  const registered = page.waitForResponse(
+    (response: any) =>
+      response.url().includes('/jupyterlab-commands/api/register') &&
+      response.ok(),
+    { timeout: 30000 }
+  );
+  await page.evaluate(
+    async (allowed: string[]) => {
+      const registry = await (window as any).galata.getPlugin(
+        '@jupyterlab/apputils-extension:settings'
+      );
+      const settings = await registry.load(
+        'jupyterlab_commands_extension:plugin'
+      );
+      await settings.set('allowedCommands', allowed);
+    },
+    ['file:download']
+  );
+  await registered;
+
+  const name = 'cli-download-4f7e.csv';
+  await page.evaluate(async file => {
+    const app = (window as any).jupyterapp;
+    await app.serviceManager.contents.save(
+      file,
+      { type: 'file', format: 'text' },
+      'cli download e2e payload'
+    );
+  }, name);
+
+  const downloadPromise = page.waitForEvent('download');
+  const downloaded = await runCli(
+    ['execute', 'file:download', '--args', JSON.stringify({ path: name })],
+    env
+  );
+  const download = await downloadPromise;
+  expect(download.suggestedFilename()).toBe(name);
+  expect(downloaded.code).toBe(0);
+  expectNoToken(downloaded);
+
+  const missing = await runCli(
+    [
+      'execute',
+      'file:download',
+      '--args',
+      JSON.stringify({ path: 'no-such-file-4f7e.csv' })
+    ],
+    env
+  );
+  expect(missing.code).toBe(5);
+  expectNoToken(missing);
+  expect(missing.stderr).toContain('HTTP 500');
 });
 
 test('--help names the token variables and every exit code', () => {

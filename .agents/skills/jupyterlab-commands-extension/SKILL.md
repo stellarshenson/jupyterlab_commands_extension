@@ -1,6 +1,6 @@
 ---
 name: jupyterlab-commands-extension
-description: Run an allowed JupyterLab command in a browser tab, through the `jupyterlab-commands` CLI of jupyterlab_commands_extension. Use when a task needs the running JupyterLab to open a file, create a notebook, console, terminal or launcher, show a notification, or run any command id the user has allowed, or keep the JupyterHub session from being culled as idle while work runs (`activity`), or "run a JupyterLab command".
+description: Run an allowed JupyterLab command in a browser tab, through the `jupyterlab-commands` CLI of jupyterlab_commands_extension. Use when a task needs the running JupyterLab to open a file, create a notebook, console, terminal or launcher, show a notification, download a lab file to the user computer through their browser (`file:download`), or run any command id the user has allowed, or keep the JupyterHub session from being culled as idle while work runs (`activity`), or "run a JupyterLab command".
 ---
 
 # jupyterlab-commands

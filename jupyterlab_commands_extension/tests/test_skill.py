@@ -55,3 +55,13 @@ def test_skill_description_names_the_hub_session():
     assert "JupyterHub session" in description
     assert "culled as idle" in description
     assert "`activity`" in description
+
+
+def test_skill_description_names_the_file_download():
+    text = REPOSITORY_SKILL.read_text(encoding="utf-8")
+    description = next(
+        line for line in text.splitlines() if line.startswith("description:")
+    )
+    assert "`file:download`" in description
+    assert "download a lab file to the user computer" in description
+    assert "through their browser" in description

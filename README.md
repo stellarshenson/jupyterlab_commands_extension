@@ -55,15 +55,23 @@ JUPYTERLAB_COMMANDS_TOKEN=... jupyterlab-commands --url https://remote-host:8888
 jupyterlab-commands activity
 ```
 
+`file:download` starts a browser download of a file the contents API serves. The `path` argument names the file relative to the server root; the file must exist, and folders are refused. The download starts in the browser tab that runs the relay, so the file lands on the user computer.
+
+```bash
+jupyterlab-commands execute file:download --args '{"path": "data/report.csv"}'
+```
+
 Exit codes: 0 success, 2 discovery or usage error, 3 no browser client, 4 command not allowed, 5 execution error.
 
 The browser tab is the executor: the command runs in the lab, not in the terminal.
 
 ## Allowlist
 
-The `allowedCommands` setting holds the command IDs the CLI may run. The defaults are `docmanager:open`, `help:open`, `apputils:notify`, `notebook:create-new`, `console:create`, `terminal:create-new`, `launcher:create` and `jupyterlab-commands-reference:open`.
+The `allowedCommands` setting holds the command IDs the CLI may run. The defaults are `docmanager:open`, `help:open`, `apputils:notify`, `notebook:create-new`, `console:create`, `terminal:create-new`, `launcher:create`, `jupyterlab-commands-reference:open` and `file:download`.
 
 The **Add to command executor** button in the Command Executor column of the reference tab appends that command ID to the setting, and the button then shows **Added**. The setting can also be edited directly in **Settings > Settings Editor > Commands Executor**, whose plugin ID is `jupyterlab_commands_extension:plugin`.
+
+A user with a saved `allowedCommands` list keeps it; the extension does not rewrite the list, so add `file:download` with the **Add to command executor** button.
 
 The reference tab opens from the command palette as **Show Commands Reference** under Help, and carries the text editor icon.
 

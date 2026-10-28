@@ -183,6 +183,13 @@ The `jupyterlab-commands` CLI: listing, executing, refusing, error codes and rel
   - log: 2026-10-19T20:04:03Z @kj added
   - log: 2026-10-19T20:04:08Z @kj closed
   - log: 2026-10-19T20:06:35Z @kj rejected: the Star Colonel ruled the source marker a one-off trial only; activity pings carry no marker; evidence retired: pytest source tree 1.0.18 (logs/activity-marker-pytest.log, 134 pass): UNIT test_activity_adds_the_source_marker_once x3, test_activity_posts_one_hub_activity_tick x4, test_activity_bypasses_the_proxy, test_help_names_variables_exit_codes_examples_and_flags; FUNCTIONAL test_activity_subprocess_posts_to_the_hub_activity_route; test_skill_description_names_the_hub_session pass
+- [x] `ACC-CLI-34-DOWNLOAD` **file:download starts a browser download** - HIGH; file:download starts a browser download of the lab file given by path; a missing file, a refused path and a folder return an error to the CLI; the command is in the default allowlist
+  - evidence: Jest src/**tests**/file-download.spec.ts passes (make test: 20 tests, 4 suites); Galata ui-tests/tests/jupyterlab_commands_cli.spec.ts file:download download and missing-path tests pass (full suite 7 passed on wheel 1.0.22, JUPYTER_TEST_PORT=8903); pytest 132 passed; browser_check and pm-tools check docs/ --strict pass
+  - test: register a tab, create a file through the contents API, execute file:download with its path and assert the download event fires and the exit code is 0; a missing path asserts exit 5 with an error on stderr
+  - test-tags: UNIT, FUNCTIONAL
+  - mechanism: 2026-10-28T14:59:16Z @kj the command resolves the path through the contents API and clicks a temporary anchor carrying the download attribute, the same lines as FileBrowserModel.download
+  - log: 2026-10-28T14:59:16Z @kj added
+  - log: 2026-10-28T16:01:17Z @kj closed
 
 ## Authentication and token handling `GUARD`
 

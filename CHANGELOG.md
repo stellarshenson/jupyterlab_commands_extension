@@ -2,6 +2,14 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## [1.1.1] - 2026-10-28
+
+### Added
+
+- `jupyterlab-commands execute file:download --args '{"path": "data/report.csv"}'` downloads a lab file in the browser tab that runs the relay, so the file lands on the user's computer; the path must exist and a folder is refused
+- `file:download` joins the default `allowedCommands` list; a saved list keeps its own entries and gains the id through the Add to command executor button
+- The agent skill triggers on downloading a lab file to the user's computer
+
 ## [1.0.18] - 2026-10-20
 
 ### Added
