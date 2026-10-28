@@ -2,6 +2,17 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## [1.1.7] - 2026-10-29
+
+### Added
+
+- `jupyterlab-commands execute` accepts `--purpose` (at most 25 words) and `--owner`; both are optional in the CLI and required by the agent skill, and both are written to the execute audit line
+- `workspace-ui:open` joins the default `allowedCommands` list
+
+### Changed
+
+- Each execute audit line now carries the optional purpose and the owner after the remote IP
+
 ## [1.1.5] - 2026-10-28
 
 ### Changed

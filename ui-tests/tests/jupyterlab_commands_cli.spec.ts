@@ -25,7 +25,8 @@ const DEFAULT_ALLOWED = [
   'terminal:create-new',
   'launcher:create',
   'jupyterlab-commands-reference:open',
-  'file:download'
+  'file:download',
+  'workspace-ui:open'
 ];
 
 /** Every variable that could let discovery reach the developer's own lab. */
@@ -208,7 +209,11 @@ test('execute runs an allowed command and refuses one outside the allowlist', as
       'execute',
       'apputils:notify',
       '--args',
-      JSON.stringify({ message, options: { autoClose: false } })
+      JSON.stringify({ message, options: { autoClose: false } }),
+      '--purpose',
+      'cli relay e2e purpose',
+      '--owner',
+      'jupyterlab-commands-extension'
     ],
     env
   );
@@ -225,6 +230,34 @@ test('execute runs an allowed command and refuses one outside the allowlist', as
   expect(refused.stderr).toContain('not in the browser allowlist');
   // The refusal names the address the CLI resolved, not just an error code.
   expect(refused.stderr).toContain(`from ${BASE_URL}`);
+});
+
+test('an over-long purpose is refused before any command runs', async ({
+  page
+}) => {
+  // Fails if the word-limit check moves behind the relay call: the CLI must
+  // exit before sending anything, so the notification never reaches the page.
+  const env = isolatedEnvironment();
+  await waitForRegistration(page);
+
+  const message = 'cli relay overlong 9b2d';
+  const purpose = Array.from({ length: 26 }, () => 'word').join(' ');
+  const refused = await runCli(
+    [
+      'execute',
+      'apputils:notify',
+      '--args',
+      JSON.stringify({ message, options: { autoClose: false } }),
+      '--purpose',
+      purpose
+    ],
+    env
+  );
+
+  expect(refused.code).toBe(2);
+  expectNoToken(refused);
+  expect(refused.stderr).toContain('at most 25 words');
+  await expect(page.getByText(message)).toHaveCount(0);
 });
 
 test('file:download downloads a file and reports a missing path', async ({

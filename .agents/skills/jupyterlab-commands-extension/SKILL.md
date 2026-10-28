@@ -13,6 +13,7 @@ Commands, flags, output, exit codes: `jupyterlab-commands --help`, `jupyterlab-c
 
 - Never print the token. Do not put it in a command you show or log. The CLI reads it from the environment or the server record
 - Run `jupyterlab-commands --list` before `execute`. The allowlist belongs to the browser tab; a command outside it fails with exit code 4
+- Every `execute` passes `--purpose` (at most 25 words) and `--owner` (agent or project name); the CLI treats both as optional, this skill does not
 - Ask the user before an action that cannot be undone, or that opens or edits their files. `execute` runs in their lab
 - Long output: pass `--json` and read the fields you need
 - `file:download` takes `path` relative to the server root, not the shell directory; the file lands in the download folder of the computer that runs the browser tab, not on the server

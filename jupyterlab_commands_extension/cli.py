@@ -35,6 +35,9 @@ REQUEST_TIMEOUT_S = 10
 # The server waits 30 s for the browser, so the client must wait longer.
 EXECUTE_TIMEOUT_S = 35
 
+# Audit context an execute request can carry.
+PURPOSE_WORD_LIMIT = 25
+
 EXIT_OK = 0
 EXIT_USAGE = 2
 EXIT_NO_CLIENT = 3
@@ -112,6 +115,8 @@ EXECUTE_EPILOG = """\
 Examples:
   jupyterlab-commands execute docmanager:open --args '{"path": "notebook.ipynb"}'
   jupyterlab-commands execute apputils:notify --args-file notify.json --json
+  jupyterlab-commands execute docmanager:open --purpose 'show the report' \\
+      --owner data-team
   JUPYTERLAB_COMMANDS_TOKEN=... jupyterlab-commands execute docmanager:open \\
       --url https://remote-host:8888 --args '{"path": "README.md"}'
 """
@@ -692,13 +697,40 @@ def _run_list(args: argparse.Namespace) -> int:
     return EXIT_OK
 
 
+def _execution_context(args: argparse.Namespace) -> dict[str, str]:
+    """The optional purpose and owner, stripped and checked.
+
+    The body carries a value only when its flag is given, so an execute
+    without either flag sends the same body as before.
+    """
+    context: dict[str, str] = {}
+    for name in ("purpose", "owner"):
+        value = getattr(args, name)
+        if value is None:
+            continue
+        value = value.strip()
+        if not value:
+            raise CliError(f"--{name} must not be empty", EXIT_USAGE)
+        context[name] = value
+    if len(context.get("purpose", "").split()) > PURPOSE_WORD_LIMIT:
+        raise CliError(
+            f"--purpose must be at most {PURPOSE_WORD_LIMIT} words", EXIT_USAGE
+        )
+    return context
+
+
 def _run_execute(args: argparse.Namespace) -> int:
     command_args = _read_arguments(args)
+    payload = {
+        "command": args.command,
+        "args": command_args,
+        **_execution_context(args),
+    }
     url, token, local = _resolve_target(args)
     answer = _post(
         url,
         "execute",
-        {"command": args.command, "args": command_args},
+        payload,
         token,
         EXECUTE_TIMEOUT_S,
         EXIT_EXECUTION,
@@ -795,6 +827,12 @@ def _build_parser() -> argparse.ArgumentParser:
     source.add_argument("--args", help="command arguments as one JSON object")
     source.add_argument(
         "--args-file", help="file holding the command arguments as one JSON object"
+    )
+    execute.add_argument(
+        "--purpose", help="short purpose of this execution, at most 25 words"
+    )
+    execute.add_argument(
+        "--owner", help="owner of this action, an agent name or a project name"
     )
     subparsers.add_parser(
         "activity",

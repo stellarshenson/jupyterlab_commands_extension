@@ -27,6 +27,33 @@ from .relay import (
 API_NAMESPACE = "jupyterlab-commands"
 RELAY_KEY = "jupyterlab_commands_relay"
 ARGS_LOG_LIMIT = 500
+PURPOSE_WORD_LIMIT = 25
+
+
+def _checked_context(purpose: Any, owner: Any) -> tuple[Any, Any]:
+    """Check the optional purpose and owner audit fields.
+
+    Each may be absent or null; when present it must be a string that strips
+    to non-empty, and the purpose carries at most PURPOSE_WORD_LIMIT words.
+    """
+    checked = []
+    for name, value in (("purpose", purpose), ("owner", owner)):
+        if value is not None:
+            if not isinstance(value, str) or not value.strip():
+                raise BadRequestError(
+                    f"'{name}' must be a non-empty string when given"
+                )
+            value = value.strip()
+        checked.append(value)
+    purpose_text, owner_text = checked
+    if (
+        purpose_text is not None
+        and len(purpose_text.split()) > PURPOSE_WORD_LIMIT
+    ):
+        raise BadRequestError(
+            f"'purpose' must be at most {PURPOSE_WORD_LIMIT} words"
+        )
+    return purpose_text, owner_text
 
 
 def _relay_errors(
@@ -131,15 +158,20 @@ class ExecuteHandler(RelayHandler):
         started = time.monotonic()
         command: Any = None
         args: Any = None
+        purpose: Any = None
+        owner: Any = None
         try:
             body = self.body()
             command = body.get("command")
             args = body.get("args")
+            purpose = body.get("purpose")
+            owner = body.get("owner")
+            purpose, owner = _checked_context(purpose, owner)
             data = await self.relay.execute(command, args)
         except RelayError as error:
-            self._log_execution(started, command, args, error)
+            self._log_execution(started, command, args, purpose, owner, error)
             raise
-        self._log_execution(started, command, args, None)
+        self._log_execution(started, command, args, purpose, owner, None)
         self.finish(json.dumps({"ok": True, "data": data}))
 
     def _log_execution(
@@ -147,18 +179,28 @@ class ExecuteHandler(RelayHandler):
         started: float,
         command: Any,
         args: Any,
+        purpose: Any,
+        owner: Any,
         error: RelayError | None,
     ) -> None:
         """Write one audit line for this execute request.
 
-        Only the command, the arguments, the elapsed time and the remote IP
-        are read, so the request's Authorization token cannot reach the log.
+        Only the command, the arguments, the optional purpose and owner, the
+        elapsed time and the remote IP are read, so the request's
+        Authorization token cannot reach the log.
         """
         args_text = json.dumps(args, separators=(",", ":"))
         if len(args_text) > ARGS_LOG_LIMIT:
             args_text = args_text[:ARGS_LOG_LIMIT]
         elapsed_ms = int((time.monotonic() - started) * 1000)
-        line = "execute %s command=%r args=%s elapsed_ms=%d remote_ip=%s"
+        context = (
+            "" if purpose is None else purpose,
+            "" if owner is None else owner,
+        )
+        line = (
+            "execute %s command=%r args=%s elapsed_ms=%d remote_ip=%s"
+            " purpose=%r owner=%r"
+        )
         if error is None:
             self.log.info(
                 line,
@@ -167,6 +209,7 @@ class ExecuteHandler(RelayHandler):
                 args_text,
                 elapsed_ms,
                 self.request.remote_ip,
+                *context,
             )
             return
         outcome = (
@@ -181,6 +224,7 @@ class ExecuteHandler(RelayHandler):
             args_text,
             elapsed_ms,
             self.request.remote_ip,
+            *context,
             error.code,
         )
 

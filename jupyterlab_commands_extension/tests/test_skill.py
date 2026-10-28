@@ -47,6 +47,17 @@ def test_skill_states_that_activity_marks_the_server_active_once():
     assert "never loop without the user's word" in rule
 
 
+def test_skill_requires_purpose_and_owner_on_execute():
+    text = REPOSITORY_SKILL.read_text(encoding="utf-8")
+    rule = next(
+        line for line in text.splitlines() if line.startswith("- Every `execute`")
+    )
+    assert "`--purpose`" in rule
+    assert "at most 25 words" in rule
+    assert "`--owner`" in rule
+    assert "optional" in rule
+
+
 def test_skill_description_names_the_hub_session():
     text = REPOSITORY_SKILL.read_text(encoding="utf-8")
     description = next(

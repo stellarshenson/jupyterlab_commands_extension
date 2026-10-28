@@ -411,6 +411,63 @@ def test_a_successful_execute_prints_the_data(stub, capsys):
     }
 
 
+def test_execute_sends_the_purpose_and_owner_when_given(stub):
+    stub.responder = lambda path, body: (200, {"ok": True, "data": None})
+
+    code = cli.main(
+        [
+            "--url",
+            _base_url(stub),
+            "execute",
+            "docmanager:open",
+            "--purpose",
+            "  open the report for review  ",
+            "--owner",
+            " data-team ",
+        ]
+    )
+
+    assert code == cli.EXIT_OK
+    assert stub.requests[0]["body"] == {
+        "command": "docmanager:open",
+        "args": {},
+        "purpose": "open the report for review",
+        "owner": "data-team",
+    }
+
+
+def test_a_purpose_over_twenty_five_words_exits_2(stub, capsys):
+    purpose = " ".join(["word"] * 26)
+
+    code = cli.main(
+        [
+            "--url",
+            _base_url(stub),
+            "execute",
+            "docmanager:open",
+            "--purpose",
+            purpose,
+        ]
+    )
+
+    captured = capsys.readouterr()
+    assert code == cli.EXIT_USAGE
+    assert "at most 25 words" in captured.err
+    assert stub.requests == []
+
+
+@pytest.mark.parametrize("flag", ["--purpose", "--owner"])
+def test_an_empty_execution_context_value_exits_2(stub, capsys, flag):
+    code = cli.main(
+        ["--url", _base_url(stub), "execute", "docmanager:open", flag, "   "]
+    )
+
+    captured = capsys.readouterr()
+    assert code == cli.EXIT_USAGE
+    assert flag in captured.err
+    assert stub.requests == []
+
+
 def test_args_can_come_from_a_file(stub, tmp_path, capsys):
     arguments = tmp_path / "arguments.json"
     arguments.write_text('{"path": "README.md"}', encoding="utf-8")

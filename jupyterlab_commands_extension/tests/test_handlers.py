@@ -280,6 +280,69 @@ async def test_a_successful_execution_is_logged_at_info(execute_log):
     assert 'args={"path":"README.md"}' in message
     assert "elapsed_ms=" in message
     assert "remote_ip=127.0.0.1" in message
+    assert "purpose='' owner=''" in message
+
+
+@pytest.mark.asyncio
+async def test_a_successful_execution_logs_the_purpose_and_owner(execute_log):
+    """Fails if a successful execute stops carrying its audit context."""
+    relay = _relay_with_client()
+    harness = _HandlerHarness(
+        handlers.ExecuteHandler,
+        relay,
+        body={
+            "command": "docmanager:open",
+            "args": {"path": "README.md"},
+            "purpose": "open the report",
+            "owner": "data-team",
+        },
+    )
+
+    execution = asyncio.create_task(harness.handler.post())
+    request = await relay.next_request("browser-1", timeout=1)
+    relay.submit_result(request.request_id, True, {"opened": "README.md"})
+    await execution
+
+    message = _only_message(execute_log)
+    assert "purpose='open the report'" in message
+    assert "owner='data-team'" in message
+
+
+@pytest.mark.asyncio
+async def test_a_purpose_over_twenty_five_words_is_refused_and_logged(execute_log):
+    """Fails if an over-long purpose is accepted or leaves no audit line."""
+    harness = _HandlerHarness(
+        handlers.ExecuteHandler,
+        _relay_with_client(),
+        body={
+            "command": "docmanager:open",
+            "purpose": " ".join(["word"] * 26),
+        },
+    )
+
+    await harness.handler.post()
+
+    assert harness.status == 400
+    assert harness.answer["error"]["code"] == "bad-request"
+    message = _only_message(execute_log)
+    assert "refused" in message
+    assert "error=bad-request" in message
+
+
+@pytest.mark.asyncio
+async def test_a_non_string_owner_is_refused(execute_log):
+    """Fails if a non-string owner reaches the audit line as a value."""
+    harness = _HandlerHarness(
+        handlers.ExecuteHandler,
+        _relay_with_client(),
+        body={"command": "docmanager:open", "owner": 12},
+    )
+
+    await harness.handler.post()
+
+    assert harness.status == 400
+    assert harness.answer["error"]["code"] == "bad-request"
+    assert "refused" in _only_message(execute_log)
 
 
 @pytest.mark.asyncio

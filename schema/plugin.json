@@ -22,7 +22,8 @@
         "terminal:create-new",
         "launcher:create",
         "jupyterlab-commands-reference:open",
-        "file:download"
+        "file:download",
+        "workspace-ui:open"
       ]
     }
   },

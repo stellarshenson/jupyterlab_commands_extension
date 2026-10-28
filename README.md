@@ -61,11 +61,13 @@ jupyterlab-commands activity
 jupyterlab-commands execute file:download --args '{"path": "data/report.csv"}'
 ```
 
+The optional `--purpose` flag names the purpose of an execution in at most 25 words, and the optional `--owner` flag names the agent or project that asked for it. The CLI treats both as optional; the agent skill requires them. An empty value, or a purpose over 25 words, is a usage error.
+
 Exit codes: 0 success, 2 discovery or usage error, 3 no browser client, 4 command not allowed, 5 execution error.
 
 The browser tab is the executor: the command runs in the lab, not in the terminal.
 
-Every execute request reaches the JupyterLab server log: the outcome, the command ID, the arguments as compact JSON truncated to 500 characters, the elapsed milliseconds and the caller's remote IP, at INFO on success and WARNING on refusal or failure.
+Every execute request reaches the JupyterLab server log: the outcome, the command ID, the arguments as compact JSON truncated to 500 characters, the elapsed milliseconds, the caller's remote IP, and the purpose and owner when given, at INFO on success and WARNING on refusal or failure.
 
 ## Allowlist
 
