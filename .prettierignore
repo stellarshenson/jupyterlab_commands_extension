@@ -7,3 +7,6 @@ jupyterlab_commands_extension
 eslint.config.mjs
 .venv
 graphify-out
+
+# pm-tools owns the tracker format; prettier must not enforce it on the trackers
+docs/acc-crit*.md

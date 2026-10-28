@@ -79,6 +79,36 @@ The Commands Reference tab: its icon, its add button and the added state after a
   - log: 2026-10-18T00:51:53Z @kj added
   - log: 2026-10-18T00:53:20Z @kj closed
   - log: 2026-10-19T19:37:14Z @kj coded ICON
+- [x] `ACC-PANEL-35-FIT` **Reference table fits without horizontal scroll** - HIGH; At every panel width from 760 px up the table's content area has no horizontal scrollbar and the fifth header, Command Executor, is fully visible
+  - evidence: Python Playwright render of the widget markup at 1400/1100/1099/1000/900/899/800/760 px -> content scrollWidth equals clientWidth at every width and the Command Executor header fits everywhere (text slack 61.7/16.7/49.7/31.7/13.7/40.7/19.7/11.7 px)
+  - test: render the widget markup at 760, 1000 and 1400 px in a browser and assert content.scrollWidth equals content.clientWidth
+  - test-tags: E2E
+  - log: 2026-10-28T21:12:23Z @kj added
+  - log: 2026-10-28T21:36:11Z @kj closed
+- [x] `ACC-PANEL-36-SINGLE-LINE` **One line per command row** - MEDIUM; Every cell renders its value on one line, truncated with an ellipsis and carrying the full value in its title attribute; no row is taller than 34 px at a 1400 px panel width
+  - evidence: Playwright render of 200 rows at all eight widths -> every body row exactly 33 px (34 px with an inherited 1.4 line-height), every td computes white-space nowrap with ellipsis and keeps its title attribute
+  - test: render 200 rows at 1400 px and assert every row height is at most 34 px and every cell computes white-space nowrap
+  - test-tags: E2E
+  - log: 2026-10-28T21:12:23Z @kj added
+  - log: 2026-10-28T21:36:11Z @kj closed
+- [x] `ACC-PANEL-37-ACTION` **Row action is a compact in-table button** - MEDIUM; The Add to command executor control is a 20 px high ghost button with 11 px text and a transparent background, right-aligned in the last column, and the Added state renders disabled at opacity 0.45
+  - evidence: Playwright render of both states -> button height exactly 20 px, 11 px text, transparent background and border, right-aligned in the last column, disabled Added rows at opacity 0.45
+  - test: render one row in each state and assert the button's height, computed colours, alignment and disabled attribute
+  - test-tags: E2E
+  - log: 2026-10-28T21:12:23Z @kj added
+  - log: 2026-10-28T21:36:11Z @kj closed
+- [x] `ACC-PANEL-38-FILTER` **Filter field follows the design system** - MEDIUM; The Filter commands input is 24 px high with a 2 px radius, a --jp-layout-color0 background and a --jp-brand-color1 focus border with no glow
+  - evidence: Rendered header with JupyterLab's input.jp-mod-styled box-sizing (ui-components styling.css) -> input height 24 px, radius 2 px, --jp-layout-color0 background, focus border --jp-brand-color1 with box-shadow none
+  - test: render the header and assert the input's computed height, radius, background and focus border colour
+  - test-tags: E2E
+  - log: 2026-10-28T21:12:23Z @kj added
+  - log: 2026-10-28T21:36:11Z @kj closed
+- [x] `ACC-PANEL-39-RESPONSIVE` **Columns adapt to the panel width** - HIGH; Below 1100 px of panel width the Description column is hidden and below 900 px the Arguments column is hidden, while Command ID, Label and the action column stay visible at every width from 760 px up
+  - evidence: Playwright render at 1400/1100/1099/1000/900/899/800/760 px -> 5 columns at 1400 and 1100, 4 at 1099/1000/900, 3 at 899/800/760; Command ID, Label and the action column visible at every width, driven by the CSS container query
+  - test: render at 1400, 1000 and 800 px and assert which column headers are visible
+  - test-tags: E2E
+  - log: 2026-10-28T21:12:23Z @kj added
+  - log: 2026-10-28T21:36:11Z @kj closed
 
 ## Command line `CLI`
 
@@ -304,3 +334,29 @@ The README sections a user and an agent need to install and operate the executor
   - log: 2026-10-18T00:52:04Z @kj added
   - log: 2026-10-18T00:53:28Z @kj closed
   - log: 2026-10-19T19:37:14Z @kj coded BADGES
+
+## Execution logging `LOG`
+
+What the server writes to the JupyterLab log for each command execution
+
+- log: 2026-10-28T21:12:27Z @kj category created
+
+- [x] `ACC-LOG-40-INFO` **Successful execution logs one INFO line** - CRITICAL; Every execute request the browser completes writes exactly one INFO line through the handler's logger, carrying the command id, the arguments as JSON truncated to 500 characters, the elapsed milliseconds and the remote IP
+  - evidence: python -m pytest jupyterlab_commands_extension/tests/test_handlers.py -q -> 14 passed; a mocked execute writes one INFO 'execute succeeded command=... args=... elapsed_ms=... remote_ip=...' record into the real jupyter_server app_log
+  - test: drive the execute handler with a mocked request and assert one INFO record carrying the command id and the elapsed milliseconds
+  - test-tags: UNIT
+  - log: 2026-10-28T21:12:27Z @kj added
+  - log: 2026-10-28T21:18:11Z @kj closed
+- [x] `ACC-LOG-41-REFUSAL` **Refused or failed execution logs a WARNING** - CRITICAL; A command outside the allowlist, an unknown command, no registered client, a timeout and a browser-reported failure each write one WARNING line through the handler's logger naming the outcome and the command id
+  - evidence: python -m pytest jupyterlab_commands_extension/tests/test_handlers.py -q -> 14 passed; not-allowed, unknown-command and no-client write WARNING 'refused', and driving timeout, browser-failed, invalid JSON and non-object args wrote one WARNING each
+  - test: drive each failure path with a mocked request and assert one WARNING record naming the outcome
+  - test-tags: UNIT
+  - log: 2026-10-28T21:12:28Z @kj added
+  - log: 2026-10-28T21:18:11Z @kj closed
+- [x] `ACC-LOG-42-NO-TOKEN` **No token reaches the log** - CRITICAL; No log line contains the Authorization header value, the CLI token or the server token, on any outcome path
+  - evidence: python -m pytest jupyterlab_commands_extension/tests/test_handlers.py -q -> 14 passed; the tests send Authorization: token <fixture> and assert no captured record contains it, and the handler never reads request.headers
+  - test: capture every record the handler tests emit and assert none contains the fixture token
+  - test-tags: UNIT
+  - log: 2026-10-28T21:12:28Z @kj added
+  - log: 2026-10-28T21:18:11Z @kj closed
+

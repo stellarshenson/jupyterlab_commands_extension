@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import functools
 import json
+import time
 from typing import Any, Callable, Coroutine
 
 import tornado.web
@@ -17,12 +18,15 @@ from jupyter_server.utils import url_path_join
 from .relay import (
     PENDING_TIMEOUT_S,
     BadRequestError,
+    ExecutionFailedError,
+    ExecutionTimeoutError,
     Relay,
     RelayError,
 )
 
 API_NAMESPACE = "jupyterlab-commands"
 RELAY_KEY = "jupyterlab_commands_relay"
+ARGS_LOG_LIMIT = 500
 
 
 def _relay_errors(
@@ -124,9 +128,61 @@ class ExecuteHandler(RelayHandler):
     @tornado.web.authenticated
     @_relay_errors
     async def post(self) -> None:
-        body = self.body()
-        data = await self.relay.execute(body.get("command"), body.get("args"))
+        started = time.monotonic()
+        command: Any = None
+        args: Any = None
+        try:
+            body = self.body()
+            command = body.get("command")
+            args = body.get("args")
+            data = await self.relay.execute(command, args)
+        except RelayError as error:
+            self._log_execution(started, command, args, error)
+            raise
+        self._log_execution(started, command, args, None)
         self.finish(json.dumps({"ok": True, "data": data}))
+
+    def _log_execution(
+        self,
+        started: float,
+        command: Any,
+        args: Any,
+        error: RelayError | None,
+    ) -> None:
+        """Write one audit line for this execute request.
+
+        Only the command, the arguments, the elapsed time and the remote IP
+        are read, so the request's Authorization token cannot reach the log.
+        """
+        args_text = json.dumps(args, separators=(",", ":"))
+        if len(args_text) > ARGS_LOG_LIMIT:
+            args_text = args_text[:ARGS_LOG_LIMIT]
+        elapsed_ms = int((time.monotonic() - started) * 1000)
+        line = "execute %s command=%r args=%s elapsed_ms=%d remote_ip=%s"
+        if error is None:
+            self.log.info(
+                line,
+                "succeeded",
+                command,
+                args_text,
+                elapsed_ms,
+                self.request.remote_ip,
+            )
+            return
+        outcome = (
+            "failed"
+            if isinstance(error, (ExecutionTimeoutError, ExecutionFailedError))
+            else "refused"
+        )
+        self.log.warning(
+            line + " error=%s",
+            outcome,
+            command,
+            args_text,
+            elapsed_ms,
+            self.request.remote_ip,
+            error.code,
+        )
 
 
 def setup_route_handlers(web_app: Any) -> None:

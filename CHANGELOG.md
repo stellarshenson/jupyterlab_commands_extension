@@ -2,6 +2,23 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## [1.1.3] - 2026-10-28
+
+### Added
+
+- Every `jupyterlab-commands execute` request writes one line to the JupyterLab server log: INFO on success, WARNING on refusal, timeout or failure, naming the command ID, the arguments cut at 500 characters, the elapsed milliseconds and the caller's remote IP; no token is ever logged
+- The agent skill states the `file:download` path, destination and exit codes, names the Add to command executor remedy for an older saved allowlist, and carries its improvement certificate
+
+### Changed
+
+- The Commands Reference table uses a fixed layout with single-line cells, 10 px uppercase headers, a compact in-table Add button and the design system's filter field
+- The table adapts to its own panel width: Description hides below 1100 px and Arguments below 900 px, while Command ID, Label and the action stay visible from 760 px up
+
+### Fixed
+
+- The Commands Reference table no longer scrolls sideways or stretches its rows when the panel narrows
+- The lint and link CI gates no longer trip on the pm-tools tracker line ending or the placeholder hosts recorded in the defect tracker
+
 ## [1.1.1] - 2026-10-28
 
 ### Added

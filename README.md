@@ -65,6 +65,8 @@ Exit codes: 0 success, 2 discovery or usage error, 3 no browser client, 4 comman
 
 The browser tab is the executor: the command runs in the lab, not in the terminal.
 
+Every execute request reaches the JupyterLab server log: the outcome, the command ID, the arguments as compact JSON truncated to 500 characters, the elapsed milliseconds and the caller's remote IP, at INFO on success and WARNING on refusal or failure.
+
 ## Allowlist
 
 The `allowedCommands` setting holds the command IDs the CLI may run. The defaults are `docmanager:open`, `help:open`, `apputils:notify`, `notebook:create-new`, `console:create`, `terminal:create-new`, `launcher:create`, `jupyterlab-commands-reference:open` and `file:download`.

@@ -69,7 +69,8 @@ export class CommandsReferenceWidget extends Widget {
     this._searchInput = document.createElement('input');
     this._searchInput.type = 'text';
     this._searchInput.placeholder = 'Filter commands...';
-    this._searchInput.className = 'jp-CommandsReferenceWidget-search';
+    this._searchInput.className =
+      'jp-CommandsReferenceWidget-search jp-mod-styled';
     this._searchInput.addEventListener('input', () => {
       this._filterCommands();
     });

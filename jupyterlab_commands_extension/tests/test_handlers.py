@@ -8,6 +8,7 @@ not needed to prove the status code and the JSON body of each answer.
 
 import asyncio
 import json
+import logging
 from types import SimpleNamespace
 
 import pytest
@@ -21,6 +22,7 @@ COMMANDS = [
     {"id": "help:open", "label": "Open help"},
 ]
 ALLOWED = ["docmanager:open"]
+CLI_TOKEN = "fixture-cli-token-4f9a"
 
 
 class _FakeWebApp:
@@ -84,6 +86,8 @@ class _HandlerHarness:
             body=b"" if body is None else json.dumps(body).encode("utf-8"),
             uri="/jupyterlab-commands/api/test",
             full_url=lambda: "http://localhost/jupyterlab-commands/api/test",
+            headers={"Authorization": f"token {CLI_TOKEN}"},
+            remote_ip="127.0.0.1",
         )
         self.handler = handler
         self.status = None
@@ -110,6 +114,39 @@ def _relay_with_client(client_id="browser-1", allowed=ALLOWED):
     relay = Relay()
     relay.register(client_id, COMMANDS, allowed)
     return relay
+
+
+class _RecordingLogHandler(logging.Handler):
+    """Keep log records in a list so a test can inspect them."""
+
+    def __init__(self, records: list[logging.LogRecord]) -> None:
+        super().__init__()
+        self.records = records
+
+    def emit(self, record: logging.LogRecord) -> None:
+        self.records.append(record)
+
+
+@pytest.fixture
+def execute_log(monkeypatch):
+    """Collect the records ExecuteHandler writes through self.log."""
+    records: list[logging.LogRecord] = []
+    logger = logging.getLogger("test.jupyterlab_commands.execute")
+    logger.setLevel(logging.DEBUG)
+    logger.propagate = False
+    recorder = _RecordingLogHandler(records)
+    logger.addHandler(recorder)
+    monkeypatch.setattr(handlers.ExecuteHandler, "log", logger)
+    yield records
+    logger.removeHandler(recorder)
+
+
+def _only_message(records):
+    """The one line logged for a request, free of the fixture token."""
+    assert len(records) == 1
+    message = records[0].getMessage()
+    assert CLI_TOKEN not in message
+    return message
 
 
 @pytest.mark.asyncio
@@ -219,6 +256,87 @@ async def test_execute_without_a_registered_client_returns_503():
 
     assert harness.status == 503
     assert harness.answer["error"]["code"] == "no-client"
+
+
+@pytest.mark.asyncio
+async def test_a_successful_execution_is_logged_at_info(execute_log):
+    """Fails if a successful execute request stops reaching the server log."""
+    relay = _relay_with_client()
+    harness = _HandlerHarness(
+        handlers.ExecuteHandler,
+        relay,
+        body={"command": "docmanager:open", "args": {"path": "README.md"}},
+    )
+
+    execution = asyncio.create_task(harness.handler.post())
+    request = await relay.next_request("browser-1", timeout=1)
+    relay.submit_result(request.request_id, True, {"opened": "README.md"})
+    await execution
+
+    message = _only_message(execute_log)
+    assert execute_log[0].levelno == logging.INFO
+    assert "succeeded" in message
+    assert "docmanager:open" in message
+    assert 'args={"path":"README.md"}' in message
+    assert "elapsed_ms=" in message
+    assert "remote_ip=127.0.0.1" in message
+
+
+@pytest.mark.asyncio
+async def test_a_command_outside_the_allowlist_is_logged_as_refused(execute_log):
+    """Fails if a command-not-allowed refusal stops reaching the server log."""
+    harness = _HandlerHarness(
+        handlers.ExecuteHandler,
+        _relay_with_client(),
+        body={"command": "help:open"},
+    )
+
+    await harness.handler.post()
+
+    message = _only_message(execute_log)
+    assert execute_log[0].levelno == logging.WARNING
+    assert "refused" in message
+    assert "help:open" in message
+    assert "error=command-not-allowed" in message
+    assert harness.status == 403
+
+
+@pytest.mark.asyncio
+async def test_an_unknown_command_is_logged_as_refused(execute_log):
+    """Fails if an unknown-command refusal stops reaching the server log."""
+    harness = _HandlerHarness(
+        handlers.ExecuteHandler,
+        _relay_with_client(),
+        body={"command": "not:a-command"},
+    )
+
+    await harness.handler.post()
+
+    message = _only_message(execute_log)
+    assert execute_log[0].levelno == logging.WARNING
+    assert "refused" in message
+    assert "not:a-command" in message
+    assert "error=unknown-command" in message
+    assert harness.status == 404
+
+
+@pytest.mark.asyncio
+async def test_an_execution_without_a_client_is_logged_as_refused(execute_log):
+    """Fails if a no-client refusal stops reaching the server log."""
+    harness = _HandlerHarness(
+        handlers.ExecuteHandler,
+        Relay(),
+        body={"command": "docmanager:open"},
+    )
+
+    await harness.handler.post()
+
+    message = _only_message(execute_log)
+    assert execute_log[0].levelno == logging.WARNING
+    assert "refused" in message
+    assert "docmanager:open" in message
+    assert "error=no-client" in message
+    assert harness.status == 503
 
 
 @pytest.mark.asyncio

@@ -10,6 +10,7 @@
   flex-direction: column;
   height: 100%;
   overflow: hidden;
+  container-type: inline-size;
 }
 
 /* Header with search and count */
@@ -23,23 +24,28 @@
   flex-shrink: 0;
 }
 
-/* Search input */
-.jp-CommandsReferenceWidget-search {
+/*
+ * Search input. jp-mod-styled supplies the same properties at a higher
+ * specificity, so each rule repeats the class after it.
+ */
+input.jp-mod-styled.jp-CommandsReferenceWidget-search {
   flex: 1;
-  padding: 6px 10px;
+  height: 24px;
+  padding: 0 9px;
   border: 1px solid var(--jp-border-color1);
-  border-radius: 4px;
+  border-radius: 2px;
   background: var(--jp-layout-color0);
   color: var(--jp-ui-font-color1);
   font-size: var(--jp-ui-font-size1);
   outline: none;
 }
 
-.jp-CommandsReferenceWidget-search:focus {
+input.jp-mod-styled.jp-CommandsReferenceWidget-search:focus {
   border-color: var(--jp-brand-color1);
+  box-shadow: none;
 }
 
-.jp-CommandsReferenceWidget-search::placeholder {
+input.jp-mod-styled.jp-CommandsReferenceWidget-search::placeholder {
   color: var(--jp-ui-font-color3);
 }
 
@@ -60,6 +66,7 @@
 /* Commands table */
 .jp-CommandsReferenceWidget-table {
   width: 100%;
+  table-layout: fixed;
   border-collapse: collapse;
   font-size: var(--jp-ui-font-size1);
 }
@@ -73,21 +80,29 @@
 }
 
 .jp-CommandsReferenceWidget-table th {
-  padding: 8px 12px;
+  box-sizing: border-box;
+  padding: 6px 12px;
+  overflow: hidden;
   text-align: left;
-  font-weight: 600;
-  color: var(--jp-ui-font-color1);
-  border-bottom: 2px solid var(--jp-border-color1);
+  text-overflow: ellipsis;
   white-space: nowrap;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--jp-ui-font-color3);
+  border-bottom: 1px solid var(--jp-border-color2);
 }
 
 /* Table cells */
 .jp-CommandsReferenceWidget-table td {
+  box-sizing: border-box;
   padding: 6px 12px;
   border-bottom: 1px solid var(--jp-border-color2);
   color: var(--jp-ui-font-color1);
   vertical-align: top;
-  max-width: 300px;
+  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
@@ -99,6 +114,43 @@
   color: var(--jp-brand-color1);
   user-select: text;
   white-space: nowrap;
+}
+
+/* Command executor cell - the row action sits at the right edge */
+.jp-CommandsReferenceWidget-executor {
+  text-align: right;
+}
+
+/* In-row action button */
+.jp-CommandsReferenceWidget-add {
+  display: inline-block;
+  box-sizing: border-box;
+  max-width: 100%;
+  height: 20px;
+  padding: 0 8px;
+  overflow: hidden;
+  border: 1px solid transparent;
+  border-radius: 2px;
+  background: transparent;
+  color: var(--jp-ui-font-color2);
+  font-family: inherit;
+  font-size: var(--jp-ui-font-size0);
+  line-height: 18px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: top;
+  cursor: pointer;
+}
+
+/* Added state, and no settings to add to */
+.jp-CommandsReferenceWidget-add:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.jp-CommandsReferenceWidget-add:enabled:hover {
+  background: var(--jp-layout-color2);
+  color: var(--jp-ui-font-color1);
 }
 
 /* Alternating row colors */
@@ -115,27 +167,84 @@
   background: var(--jp-layout-color2);
 }
 
-/* Column widths */
+/* Column widths - five shares summing to 100% under the fixed layout */
 .jp-CommandsReferenceWidget-table th:nth-child(1),
 .jp-CommandsReferenceWidget-table td:nth-child(1) {
-  width: 30%;
-  min-width: 200px;
+  width: 25%;
 }
 
 .jp-CommandsReferenceWidget-table th:nth-child(2),
 .jp-CommandsReferenceWidget-table td:nth-child(2) {
-  width: 20%;
+  width: 17%;
 }
 
 .jp-CommandsReferenceWidget-table th:nth-child(3),
 .jp-CommandsReferenceWidget-table td:nth-child(3) {
-  width: 30%;
+  width: 26%;
 }
 
-.jp-CommandsReferenceWidget-table th:nth-child(4),
+.jp-CommandsReferenceWidget-table th:nth-child(4) {
+  width: 17%;
+}
+
 .jp-CommandsReferenceWidget-table td:nth-child(4) {
-  width: 20%;
+  width: 17%;
   font-family: var(--jp-code-font-family);
   font-size: var(--jp-code-font-size);
   color: var(--jp-ui-font-color2);
+}
+
+.jp-CommandsReferenceWidget-table th:nth-child(5),
+.jp-CommandsReferenceWidget-table td:nth-child(5) {
+  width: 15%;
+}
+
+/* Adaptive columns - keyed to the panel width, not the viewport. Narrower blocks come later so they win. */
+@container (max-width: 1099px) {
+  .jp-CommandsReferenceWidget-table th:nth-child(3),
+  .jp-CommandsReferenceWidget-table td:nth-child(3) {
+    display: none;
+  }
+
+  .jp-CommandsReferenceWidget-table th:nth-child(1),
+  .jp-CommandsReferenceWidget-table td:nth-child(1) {
+    width: 29%;
+  }
+
+  .jp-CommandsReferenceWidget-table th:nth-child(2),
+  .jp-CommandsReferenceWidget-table td:nth-child(2) {
+    width: 21%;
+  }
+
+  .jp-CommandsReferenceWidget-table th:nth-child(4),
+  .jp-CommandsReferenceWidget-table td:nth-child(4) {
+    width: 32%;
+  }
+
+  .jp-CommandsReferenceWidget-table th:nth-child(5),
+  .jp-CommandsReferenceWidget-table td:nth-child(5) {
+    width: 18%;
+  }
+}
+
+@container (max-width: 899px) {
+  .jp-CommandsReferenceWidget-table th:nth-child(4),
+  .jp-CommandsReferenceWidget-table td:nth-child(4) {
+    display: none;
+  }
+
+  .jp-CommandsReferenceWidget-table th:nth-child(1),
+  .jp-CommandsReferenceWidget-table td:nth-child(1) {
+    width: 47%;
+  }
+
+  .jp-CommandsReferenceWidget-table th:nth-child(2),
+  .jp-CommandsReferenceWidget-table td:nth-child(2) {
+    width: 32%;
+  }
+
+  .jp-CommandsReferenceWidget-table th:nth-child(5),
+  .jp-CommandsReferenceWidget-table td:nth-child(5) {
+    width: 21%;
+  }
 }
