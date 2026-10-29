@@ -2,6 +2,12 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## [1.1.9] - 2026-10-29
+
+### Added
+
+- The agent skill carries a How-to section: six worked examples for the default-enabled commands, covering a new terminal with an optional folder, a notification, opening a file, a notebook with a named kernel, a browser file download, and a workspace reload
+
 ## [1.1.7] - 2026-10-29
 
 ### Added

@@ -21,4 +21,15 @@ Commands, flags, output, exit codes: `jupyterlab-commands --help`, `jupyterlab-c
 - When `--list` lacks `file:download`, the saved allowlist predates the command; the user adds it with the Add to command executor button in the Commands Reference tab
 - `activity` marks the server active once; the hub culls it after its idle timeout counted from the last mark. While work the user asked for runs, repeat it at an interval the user names, shorter than that timeout; never loop without the user's word
 
+## How-to
+
+Every example also carries `--purpose` and `--owner`, per the rule above.
+
+- New terminal: `jupyterlab-commands execute terminal:create-new`; add `--args '{"cwd": "projects"}'` to start it in a folder
+- Notification: `jupyterlab-commands execute apputils:notify --args '{"message": "Training finished", "type": "info"}'`
+- Open a file: `jupyterlab-commands execute docmanager:open --args '{"path": "report.ipynb"}'`
+- New notebook: `jupyterlab-commands execute notebook:create-new --args '{"kernelName": "python3"}'`
+- Download a file: `jupyterlab-commands execute file:download --args '{"path": "data/report.csv"}'`
+- Reload the workspace: `jupyterlab-commands execute workspace-ui:open --args '{"workspace": "default"}'`
+
 <!-- improved 2026-10-28 | body 356→345w / 21→21L | quality 28/28 assertions, 1 blinded grader (n=1/cell, uncalibrated) | trigger 4/8 held-out | on claude-opus-5-5 | via improve-skill -->

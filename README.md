@@ -81,7 +81,7 @@ The reference tab opens from the command palette as **Show Commands Reference** 
 
 ## Agent skill
 
-The agent skill at [`.agents/skills/jupyterlab-commands-extension/SKILL.md`](.agents/skills/jupyterlab-commands-extension/SKILL.md) tells an AI assistant to read `jupyterlab-commands --help` first and adds only the rules the help cannot enforce. The wheel installs a copy at `<sys.prefix>/share/jupyter/agents/skills/jupyterlab-commands-extension/SKILL.md`. No agent reads that directory, so link the copy where agents look.
+The agent skill at [`.agents/skills/jupyterlab-commands-extension/SKILL.md`](.agents/skills/jupyterlab-commands-extension/SKILL.md) tells an AI assistant to read `jupyterlab-commands --help` first, adds the rules the help cannot enforce, and carries six worked examples for the most common default commands. The wheel installs a copy at `<sys.prefix>/share/jupyter/agents/skills/jupyterlab-commands-extension/SKILL.md`. No agent reads that directory, so link the copy where agents look.
 
 After `pip install`, with the Python that runs the lab, link the copy where Claude Code reads skills:
 
