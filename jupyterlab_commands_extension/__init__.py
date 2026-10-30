@@ -12,7 +12,7 @@ except ImportError:
 def _jupyter_labextension_paths():
     return [{
         "src": "labextension",
-        "dest": "jupyterlab_commands_extension"
+        "dest": "@stellarshenson/jupyterlab-commands-extension"
     }]
 
 

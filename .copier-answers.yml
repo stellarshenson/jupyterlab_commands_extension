@@ -8,7 +8,7 @@ has_ai_rules: false
 has_binder: false
 has_settings: false
 kind: frontend
-labextension_name: jupyterlab_commands_extension
+labextension_name: '@stellarshenson/jupyterlab-commands-extension'
 project_short_description: Jupyterlab custom command that opens a new tab where there
     is a long list of currently available commands with their full reference ( i.e.
     iframe:open ) along with the list of arguments - as extracted in realtime from

@@ -143,7 +143,7 @@ async function waitForRegistration(page: any): Promise<void> {
       '@jupyterlab/apputils-extension:settings'
     );
     const settings = await registry.load(
-      'jupyterlab_commands_extension:plugin'
+      '@stellarshenson/jupyterlab-commands-extension:plugin'
     );
     await settings.set('allowedCommands', ['apputils:notify']);
   });
@@ -167,7 +167,7 @@ test('--list names the default allowed commands and their arguments', async ({
       '@jupyterlab/apputils-extension:settings'
     );
     const settings = await registry.load(
-      'jupyterlab_commands_extension:plugin'
+      '@stellarshenson/jupyterlab-commands-extension:plugin'
     );
     await settings.set('allowedCommands', allowed);
   }, DEFAULT_ALLOWED);
@@ -279,7 +279,7 @@ test('file:download downloads a file and reports a missing path', async ({
         '@jupyterlab/apputils-extension:settings'
       );
       const settings = await registry.load(
-        'jupyterlab_commands_extension:plugin'
+        '@stellarshenson/jupyterlab-commands-extension:plugin'
       );
       await settings.set('allowedCommands', allowed);
     },

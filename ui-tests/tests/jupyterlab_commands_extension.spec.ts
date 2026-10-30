@@ -18,7 +18,7 @@ async function readAllowedCommands(page: any): Promise<string[]> {
       '@jupyterlab/apputils-extension:settings'
     );
     const settings = await registry.load(
-      'jupyterlab_commands_extension:plugin'
+      '@stellarshenson/jupyterlab-commands-extension:plugin'
     );
     return settings.composite.allowedCommands;
   });
@@ -36,7 +36,8 @@ test('should emit an activation console message', async ({ page }) => {
   expect(
     logs.filter(
       s =>
-        s === 'JupyterLab extension jupyterlab_commands_extension is activated!'
+        s ===
+        'JupyterLab extension @stellarshenson/jupyterlab-commands-extension is activated!'
     )
   ).toHaveLength(1);
 });
@@ -103,7 +104,7 @@ test('should show the allowedCommands array in the settings editor', async ({
   });
 
   const entry = page.locator(
-    '.jp-PluginList-entry[data-id="jupyterlab_commands_extension:plugin"]'
+    '.jp-PluginList-entry[data-id="@stellarshenson/jupyterlab-commands-extension:plugin"]'
   );
   await expect(entry).toBeVisible({ timeout: 30000 });
   await entry.click();

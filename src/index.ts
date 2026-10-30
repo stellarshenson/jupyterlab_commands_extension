@@ -26,7 +26,7 @@ namespace CommandIDs {
 /**
  * The id of this plugin. It is also the id of its settings schema.
  */
-const PLUGIN_ID = 'jupyterlab_commands_extension:plugin';
+const PLUGIN_ID = '@stellarshenson/jupyterlab-commands-extension:plugin';
 
 /**
  * Track the widget instance to prevent duplicates
@@ -39,7 +39,7 @@ let widget: MainAreaWidget<CommandsReferenceWidget> | null = null;
 let relay: RelayClient | null = null;
 
 /**
- * Initialization data for the jupyterlab_commands_extension extension.
+ * Initialization data for the @stellarshenson/jupyterlab-commands-extension extension.
  */
 const plugin: JupyterFrontEndPlugin<void> = {
   id: PLUGIN_ID,
@@ -58,7 +58,7 @@ const plugin: JupyterFrontEndPlugin<void> = {
     );
 
     console.log(
-      'JupyterLab extension jupyterlab_commands_extension is activated!'
+      'JupyterLab extension @stellarshenson/jupyterlab-commands-extension is activated!'
     );
 
     let settings: ISettingRegistry.ISettings | null = null;

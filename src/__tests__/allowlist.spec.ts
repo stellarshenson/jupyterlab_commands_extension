@@ -2,7 +2,7 @@ import type { ISettingRegistry } from '@jupyterlab/settingregistry';
 
 import { addAllowedCommand, getAllowedCommands } from '../allowlist';
 
-const PLUGIN_ID = 'jupyterlab_commands_extension:plugin';
+const PLUGIN_ID = '@stellarshenson/jupyterlab-commands-extension:plugin';
 
 interface IFakeSettings {
   settings: ISettingRegistry.ISettings;

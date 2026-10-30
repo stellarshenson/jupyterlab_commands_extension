@@ -1,7 +1,7 @@
 {
-  "name": "jupyterlab_commands_extension-ui-tests",
+  "name": "@stellarshenson/jupyterlab-commands-extension-ui-tests",
   "version": "1.0.0",
-  "description": "JupyterLab jupyterlab_commands_extension Integration Tests",
+  "description": "JupyterLab @stellarshenson/jupyterlab-commands-extension Integration Tests",
   "private": true,
   "scripts": {
     "start": "jupyter lab --config jupyter_server_test_config.py",

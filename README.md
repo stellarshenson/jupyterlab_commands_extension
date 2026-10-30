@@ -1,7 +1,7 @@
 # jupyterlab_commands_extension
 
 [![GitHub Actions](https://github.com/stellarshenson/jupyterlab_commands_extension/actions/workflows/build.yml/badge.svg)](https://github.com/stellarshenson/jupyterlab_commands_extension/actions/workflows/build.yml)
-[![npm version](https://img.shields.io/npm/v/jupyterlab_commands_extension.svg)](https://www.npmjs.com/package/jupyterlab_commands_extension)
+[![npm version](https://img.shields.io/npm/v/@stellarshenson/jupyterlab-commands-extension.svg)](https://www.npmjs.com/package/@stellarshenson/jupyterlab-commands-extension)
 [![PyPI version](https://img.shields.io/pypi/v/jupyterlab-commands-extension.svg)](https://pypi.org/project/jupyterlab-commands-extension/)
 [![Total PyPI downloads](https://static.pepy.tech/badge/jupyterlab-commands-extension)](https://pepy.tech/project/jupyterlab-commands-extension)
 [![JupyterLab 4](https://img.shields.io/badge/JupyterLab-4-orange.svg)](https://jupyterlab.readthedocs.io/en/stable/)
@@ -73,7 +73,7 @@ Every execute request reaches the JupyterLab server log: the outcome, the comman
 
 The `allowedCommands` setting holds the command IDs the CLI may run. The defaults are `docmanager:open`, `help:open`, `apputils:notify`, `notebook:create-new`, `console:create`, `terminal:create-new`, `launcher:create`, `jupyterlab-commands-reference:open` and `file:download`.
 
-The **Add to command executor** button in the Command Executor column of the reference tab appends that command ID to the setting, and the button then shows **Added**. The setting can also be edited directly in **Settings > Settings Editor > Commands Executor**, whose plugin ID is `jupyterlab_commands_extension:plugin`.
+The **Add to command executor** button in the Command Executor column of the reference tab appends that command ID to the setting, and the button then shows **Added**. The setting can also be edited directly in **Settings > Settings Editor > Commands Executor**, whose plugin ID is `@stellarshenson/jupyterlab-commands-extension:plugin`.
 
 A user with a saved `allowedCommands` list keeps it; the extension does not rewrite the list, so add `file:download` with the **Add to command executor** button.
 
