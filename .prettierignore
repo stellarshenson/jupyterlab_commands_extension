@@ -10,3 +10,5 @@ graphify-out
 
 # pm-tools owns the tracker format; prettier must not enforce it on the trackers
 docs/acc-crit*.md
+.claude
+.agents

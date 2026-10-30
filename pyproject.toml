@@ -32,15 +32,15 @@ jupyterlab-commands = "jupyterlab_commands_extension.cli:main"
 
 [project.optional-dependencies]
 test = [
-    "pytest>=9.1,<10",
+    "pytest>=9.2,<10",
     "pytest-asyncio>=1.4,<2",
     "pytest-cov",
     "pytest-jupyter>=0.11,<1",
 ]
 dev = [
     "jupyterlab>=4.6,<5",
-    "jupyter-builder>=1.2.0",
-    "pytest>=9.1,<10",
+    "jupyter-builder>=1.2.0,<2",
+    "pytest>=9.2,<10",
     "pytest-asyncio>=1.4,<2",
     "pytest-cov",
     "pytest-jupyter>=0.11,<1",
