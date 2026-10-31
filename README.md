@@ -29,7 +29,7 @@ Display all available JupyterLab commands with their full reference IDs and argu
 ## Requirements
 
 - JupyterLab >= 4.6.0
-- Python >= 3.10
+- Python >= 3.12
 
 ## Installation
 
