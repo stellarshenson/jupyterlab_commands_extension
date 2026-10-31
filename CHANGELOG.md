@@ -2,6 +2,13 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## [1.1.12] - 2026-10-31
+
+### Fixed
+
+- Refresh the locked packages to JupyterLab 4.6.5
+- Follow the scoped id of jupyterlab_galaxahub_motd_extension
+
 ## [1.1.11] - 2026-10-30
 
 ### Changed
