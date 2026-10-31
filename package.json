@@ -108,6 +108,16 @@
         "access": "public"
     },
     "jupyterlab": {
+        "discovery": {
+            "server": {
+                "managers": [
+                    "pip"
+                ],
+                "base": {
+                    "name": "jupyterlab_commands_extension"
+                }
+            }
+        },
         "extension": true,
         "outputDir": "jupyterlab_commands_extension/labextension",
         "schemaDir": "schema"
