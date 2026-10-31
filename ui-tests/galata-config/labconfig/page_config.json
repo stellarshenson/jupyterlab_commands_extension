@@ -1,5 +1,5 @@
 {
   "disabledExtensions": {
-    "jupyterlab_galaxahub_motd_extension": true
+    "@stellarshenson/jupyterlab-galaxahub-motd-extension": true
   }
 }
