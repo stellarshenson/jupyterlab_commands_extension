@@ -27,7 +27,7 @@ JupyterLab extension that adds a command to display all available JupyterLab com
 
 - TypeScript with JupyterLab 4.x extension API
 - Python packaging via hatchling/pyproject.toml
-- npm package: `jupyterlab_commands_extension`
+- npm package: `@stellarshenson/jupyterlab-commands-extension`
 - PyPI package: `jupyterlab_commands_extension`
 - The project owns `schema/plugin.json`; the next copier update must run with `has_settings: true`. `.copier-answers.yml` stays untouched because its header forbids hand-editing
 

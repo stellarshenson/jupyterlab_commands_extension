@@ -6,7 +6,7 @@
 
 ### Changed
 
-- Upgrade to extension template v4.6.5 and Makefile 1.46
+- Raise the package floors; the extension template v4.6.5 and Makefile 1.46 were already current
 
 ### Fixed
 
