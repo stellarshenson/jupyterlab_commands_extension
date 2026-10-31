@@ -2,6 +2,12 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## [1.1.15] - 2026-10-31
+
+### Changed
+
+- Require Python 3.12
+
 ## [1.1.14] - 2026-10-31
 
 ### Changed
