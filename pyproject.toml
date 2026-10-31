@@ -43,7 +43,7 @@ dev = [
     "jupyter-builder>=1.2.0,<2",
     "pytest>=9.2,<10",
     "pytest-asyncio>=1.4,<2",
-    "pytest-cov",
+    "pytest-cov>=7.1,<8",
     "pytest-jupyter>=0.11,<1",
 ]
 
