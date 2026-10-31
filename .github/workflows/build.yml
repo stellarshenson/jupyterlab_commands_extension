@@ -42,9 +42,18 @@ jobs:
         set -eux
         python -m pip install .[test]
 
+        pytest -vv -r ap --cov jupyterlab_commands_extension
+        jupyter server extension list
+        jupyter server extension list 2>&1 | grep -ie "jupyterlab_commands_extension.*OK"
+
         jupyter labextension list
         jupyter labextension list 2>&1 | grep -ie "@stellarshenson/jupyterlab-commands-extension.*OK"
         python -m jupyterlab.browser_check
+
+    - name: Check that all endpoints are authenticated
+      run: |
+        set -eux
+        python .github/scripts/check_auth.py
 
     - name: Package the extension
       run: |
@@ -83,6 +92,9 @@ jobs:
 
         pip install "jupyterlab>=4.6,<5" jupyterlab_commands_extension*.whl
 
+
+        jupyter server extension list
+        jupyter server extension list 2>&1 | grep -ie "jupyterlab_commands_extension.*OK"
 
         jupyter labextension list
         jupyter labextension list 2>&1 | grep -ie "@stellarshenson/jupyterlab-commands-extension.*OK"
@@ -160,4 +172,4 @@ jobs:
           python_version: '3.13'
       - uses: jupyterlab/maintainer-tools/.github/actions/check-links@v1
         with:
-          ignore_links: "https://www.npmjs.com/package/.* https://pepy.tech/.* https://static.pepy.tech/.* http://127.* http://host.* http://remote-host.*"
+          ignore_links: "https://www.youtube.com/.* https://www.npmjs.com/package/.* https://pepy.tech/.* https://static.pepy.tech/.* http://127.* http://host.* http://remote-host.*"

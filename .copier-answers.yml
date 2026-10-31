@@ -6,8 +6,8 @@ author_email: konrad.jelen@gmail.com
 author_name: Stellars Henson
 has_ai_rules: false
 has_binder: false
-has_settings: false
-kind: frontend
+has_settings: true
+kind: frontend-and-server
 labextension_name: '@stellarshenson/jupyterlab-commands-extension'
 project_short_description: Jupyterlab custom command that opens a new tab where there
     is a long list of currently available commands with their full reference ( i.e.
@@ -15,6 +15,6 @@ project_short_description: Jupyterlab custom command that opens a new tab where 
     the available commands some way. Page is supposed to serve the purpose of being
     reference help page for those who want to use the commands
 python_name: jupyterlab_commands_extension
-repository: ''
+repository: https://github.com/stellarshenson/jupyterlab_commands_extension
 test: true
 

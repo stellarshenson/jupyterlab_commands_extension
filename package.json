@@ -1,6 +1,6 @@
 {
     "name": "@stellarshenson/jupyterlab-commands-extension",
-    "version": "1.1.12",
+    "version": "1.1.13",
     "description": "Display all available JupyterLab commands with their full reference IDs and arguments in a dedicated tab",
     "keywords": [
         "jupyter",
@@ -79,6 +79,7 @@
         "eslint-plugin-prettier": "^5.5.0",
         "globals": "^15.15.0",
         "jest": "^29.7.0",
+        "mkdirp": "^1.0.3",
         "npm-run-all2": "^7.0.1",
         "prettier": "^3.9.0",
         "rimraf": "^5.0.1",

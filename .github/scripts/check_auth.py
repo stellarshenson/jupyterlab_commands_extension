@@ -1,52 +1,47 @@
-"""Fail when a request handler in the package lacks authentication.
+"""Check that all endpoints of the extension require authentication.
 
-The Makefile's ``test`` target runs this before a release. A handler method
-that Tornado can route (get, post, put, delete, patch, head, options) must
-carry ``@tornado.web.authenticated``.
+When unauthenticated access is not allowed, Jupyter Server warns about every
+handler which is missing an authentication decorator; this script turns such a
+warning into a failure, so that no endpoint can be exposed to unauthorized users
+by mistake.
+
+Run it with:
+
+    python .github/scripts/check_auth.py
 """
-
-from __future__ import annotations
-
-import ast
 import sys
-from pathlib import Path
+import warnings
 
-ROOT = Path(__file__).resolve().parents[2]
-HANDLERS = ROOT / "jupyterlab_commands_extension" / "handlers.py"
-ROUTES = {"get", "post", "put", "delete", "patch", "head", "options"}
+from jupyter_server.serverapp import ServerApp
+from jupyter_server.utils import JupyterServerAuthWarning
 
+# Initialize a server which only loads this extension and which does not allow
+# unauthenticated access.
+app = ServerApp(
+    allow_unauthenticated_access=False,
+    jpserver_extensions={"jupyterlab_commands_extension": True},
+    # Fail loudly if the extension cannot be loaded at all, instead of silently
+    # reporting that there is nothing to complain about.
+    reraise_server_extension_failures=True,
+)
 
-def _is_authenticated(decorator: ast.expr) -> bool:
-    for node in ast.walk(decorator):
-        if isinstance(node, ast.Attribute) and node.attr == "authenticated":
-            return True
-        if isinstance(node, ast.Name) and node.id == "authenticated":
-            return True
-    return False
+with warnings.catch_warnings(record=True) as records:
+    warnings.simplefilter("always")
+    app.initialize(argv=[], find_extensions=False, new_httpserver=False)
 
+problems = [
+    str(record.message)
+    for record in records
+    if issubclass(record.category, JupyterServerAuthWarning)
+]
 
-def main() -> int:
-    tree = ast.parse(HANDLERS.read_text(encoding="utf-8"), filename=str(HANDLERS))
-    missing: list[str] = []
-    for node in tree.body:
-        if not isinstance(node, ast.ClassDef):
-            continue
-        for item in node.body:
-            if not isinstance(item, (ast.FunctionDef, ast.AsyncFunctionDef)):
-                continue
-            if item.name not in ROUTES:
-                continue
-            if not any(_is_authenticated(d) for d in item.decorator_list):
-                missing.append(f"{node.name}.{item.name}")
-    if missing:
-        print(
-            "handlers missing @tornado.web.authenticated: " + ", ".join(missing),
-            file=sys.stderr,
-        )
-        return 1
-    print("every request handler requires authentication")
-    return 0
+if problems:
+    sys.exit(
+        "\n".join(problems)
+        + "\n\nAdd a `@tornado.web.authenticated` decorator to the verb methods listed"
+        " above. If an endpoint is intended to be public, add an explicit"
+        " `@allow_unauthenticated` (or `@ws_authenticated` for websockets) decorator"
+        " from `jupyter_server.auth.decorator` instead."
+    )
 
-
-if __name__ == "__main__":
-    raise SystemExit(main())
+print("All endpoints of the extension require authentication.")
