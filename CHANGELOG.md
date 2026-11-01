@@ -2,6 +2,12 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## [1.1.17] - 2026-11-01
+
+### Fixed
+
+- Start the poll loop after the first register
+
 ## [1.1.16] - 2026-10-31
 
 ### Changed
