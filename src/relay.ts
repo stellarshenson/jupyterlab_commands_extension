@@ -83,8 +83,11 @@ export class RelayClient {
     this._started = true;
     this._settings.changed.connect(this._onSettingsChanged, this);
     this._commands.commandChanged.connect(this._onCommandsChanged, this);
-    void this._register();
-    void this._pollLoop();
+    void this._register().finally(() => {
+      if (!this._disposed) {
+        void this._pollLoop();
+      }
+    });
   }
 
   /**
