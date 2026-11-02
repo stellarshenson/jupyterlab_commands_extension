@@ -98,3 +98,6 @@ This journal tracks substantive work on documents, diagrams, and documentation c
 
 32. **Task - First pending read after register** (v1.1.16): The relay client sent its first `GET /jupyterlab-commands/api/pending` before the client id existed, because `start()` ran `_register()` and `_pollLoop()` together, so the server returned 404 about 20 ms before the first POST register<br>
     **Result**: `RelayClient.start` in `src/relay.ts` now starts the poll loop from the `finally` of the first `_register`, guarded by `_disposed`, so the server contract "register before polling" holds and a failed register still starts the loop; `relay.py` is unchanged. New `src/__tests__/relay-restart.spec.ts` covers the deferred first read, a rejected register and dispose during register; with the old order restored two of the three cases fail. `jlpm build:lib`, `jlpm test --runInBand` 23/23 and `jlpm run lint:check` pass.
+
+33. **Task - Build lifecycle brought to Makefile 1.48** (v1.1.17): the canonical Makefile went to every extension on 2026-11-02<br>
+    **Result**: Makefile 1.48 verbatim; mrproper now removes tmp, logs, .venv, graphify-out, coverage and .pytest_cache; install and publish are .NOTPARALLEL; the cleaned tree carries the tag CHECKPOINT_JUPYTERLAB_4.6.5_UPGRADE_PORTED_1.1.17.
