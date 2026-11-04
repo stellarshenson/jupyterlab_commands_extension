@@ -26,7 +26,8 @@ const DEFAULT_ALLOWED = [
   'launcher:create',
   'jupyterlab-commands-reference:open',
   'file:download',
-  'workspace-ui:open'
+  'workspace-ui:open',
+  'workspace-page:open'
 ];
 
 /** Every variable that could let discovery reach the developer's own lab. */

@@ -23,7 +23,8 @@
         "launcher:create",
         "jupyterlab-commands-reference:open",
         "file:download",
-        "workspace-ui:open"
+        "workspace-ui:open",
+        "workspace-page:open"
       ]
     }
   },

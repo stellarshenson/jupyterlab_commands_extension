@@ -71,7 +71,7 @@ Every execute request reaches the JupyterLab server log: the outcome, the comman
 
 ## Allowlist
 
-The `allowedCommands` setting holds the command IDs the CLI may run. The defaults are `docmanager:open`, `help:open`, `apputils:notify`, `notebook:create-new`, `console:create`, `terminal:create-new`, `launcher:create`, `jupyterlab-commands-reference:open` and `file:download`.
+The `allowedCommands` setting holds the command IDs the CLI may run. The defaults are `docmanager:open`, `help:open`, `apputils:notify`, `notebook:create-new`, `console:create`, `terminal:create-new`, `launcher:create`, `jupyterlab-commands-reference:open`, `file:download`, `workspace-ui:open` and `workspace-page:open`.
 
 The **Add to command executor** button in the Command Executor column of the reference tab appends that command ID to the setting, and the button then shows **Added**. The setting can also be edited directly in **Settings > Settings Editor > Commands Executor**, whose plugin ID is `@stellarshenson/jupyterlab-commands-extension:plugin`.
 

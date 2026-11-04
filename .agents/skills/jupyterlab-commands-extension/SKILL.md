@@ -32,4 +32,16 @@ Every example also carries `--purpose` and `--owner`, per the rule above.
 - Download a file: `jupyterlab-commands execute file:download --args '{"path": "data/report.csv"}'`
 - Reload the workspace: `jupyterlab-commands execute workspace-ui:open --args '{"workspace": "default"}'`
 
+### Run a local web app in the lab with all permissions
+
+1. Serve the app on loopback only: `python3 -m http.server 8000 --bind 127.0.0.1`
+2. Build the URL the lab proxies: `<lab base>/proxy/8000/<path>`, where `<lab base>` is the lab address in the browser, for example `http://127.0.0.1:8888`
+3. Open it:
+
+```bash
+jupyterlab-commands execute workspace-page:open --args '{"url": "http://127.0.0.1:8888/proxy/8000/index.html", "title": "My app", "icon": "http://127.0.0.1:8888/proxy/8000/favicon.ico", "policy": {"sandbox": null}}' --purpose "show the app" --owner "my-agent"
+```
+
+`"policy": {"sandbox": null}` removes the iframe sandbox, so the app keeps the lab origin: its scripts, `localStorage`, cookies and POSTs reach the lab. Without `policy`, the iframe runs under the default sandbox `allow-scripts`: scripts run, but the origin is opaque, so the page has no lab session, no storage or cookies, and its requests do not reach the lab. Use the default for a page that only displays, and `sandbox: null` only for a page served from `/proxy/<port>/` that must keep state or post data.
+
 <!-- improved 2026-10-28 | body 356→345w / 21→21L | quality 28/28 assertions, 1 blinded grader (n=1/cell, uncalibrated) | trigger 4/8 held-out | on claude-opus-5-5 | via improve-skill -->

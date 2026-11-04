@@ -53,6 +53,13 @@ The `allowedCommands` setting: where it is edited, what it defaults to, and that
   - log: 2026-10-18T00:51:53Z @kj added
   - log: 2026-10-18T00:53:20Z @kj closed
   - log: 2026-10-19T19:37:14Z @kj coded PERSIST
+- [x] `ACC-ALLOW-43-PAGE-OPEN` **workspace-page:open is allowed by default** - MEDIUM; workspace-page:open is in the default allowedCommands, so jupyterlab-commands --list shows it and execute runs it; the schema test holds it.
+  - evidence: jupyterlab_commands_extension/tests/test_schema.py::test_default_allowed_commands_include_workspace_page_open passed in /home/lab/workspace/private/jupyterlab/jupyterlab_workspace_manager_extension/tmp/workflows/wm-page-policy/logs/close-commands-pytest.log (144 passed, 1 deselected); schema/plugin.json default carries workspace-page:open
+  - test: assert workspace-page:open is in the schema default and the Galata CLI --list names it
+  - test-tags: UNIT, E2E
+  - log: 2026-11-04T22:59:16Z @kj added
+  - log: 2026-11-04T23:01:40Z @kj closed
+  - log: 2026-11-04T23:13:27Z @kj edited evidence "schema/plugin.json default carries workspace-page:open; tests/test_schema.py::test_default_allowed_commands_include_workspace_page_open passed in pytest 144 passed, 1 deselected" -> "jupyterlab_commands_extension/tests/test_schema.py::test_default_allowed_commands_include_workspace_page_open passed in /home/lab/workspace/private/jupyterlab/jupyterlab_workspace_manager_extension/tmp/workflows/wm-page-policy/logs/close-commands-pytest.log (144 passed, 1 deselected); schema/plugin.json default carries workspace-page:open"
 
 ## Reference tab `PANEL`
 

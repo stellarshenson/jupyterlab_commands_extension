@@ -2,6 +2,13 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## [1.1.19] - 2026-11-05
+
+### Added
+
+- Allow `workspace-page:open` in the default commands
+- Document the local web app recipe in the agent skill
+
 ## [1.1.17] - 2026-11-01
 
 ### Fixed
