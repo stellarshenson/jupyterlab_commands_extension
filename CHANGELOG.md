@@ -2,6 +2,12 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## [1.1.21] - 2026-11-07
+
+### Added
+
+- Allow `voice-capture:stop-playback` in the default commands
+
 ## [1.1.20] - 2026-11-07
 
 ### Added

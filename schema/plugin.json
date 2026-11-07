@@ -27,7 +27,8 @@
         "workspace-page:open",
         "voice-capture:play-file",
         "voice-capture:enable",
-        "voice-capture:disable"
+        "voice-capture:disable",
+        "voice-capture:stop-playback"
       ]
     }
   },

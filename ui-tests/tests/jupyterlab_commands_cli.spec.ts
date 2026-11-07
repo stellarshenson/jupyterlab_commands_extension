@@ -30,7 +30,8 @@ const DEFAULT_ALLOWED = [
   'workspace-page:open',
   'voice-capture:play-file',
   'voice-capture:enable',
-  'voice-capture:disable'
+  'voice-capture:disable',
+  'voice-capture:stop-playback'
 ];
 
 /** Every variable that could let discovery reach the developer's own lab. */
