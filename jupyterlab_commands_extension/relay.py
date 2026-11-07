@@ -134,6 +134,15 @@ def _command_table(commands: Any) -> dict[str, dict[str, Any]]:
     return table
 
 
+def _description(descriptor: dict[str, Any]) -> str:
+    """The command's caption, else its label, on one line; empty when neither."""
+    for key in ("caption", "label"):
+        value = descriptor.get(key)
+        if isinstance(value, str) and value.split():
+            return " ".join(value.split())
+    return ""
+
+
 def _allowed_set(allowed: Any) -> set[str]:
     if not isinstance(allowed, list) or not all(
         isinstance(item, str) for item in allowed
@@ -295,11 +304,14 @@ class Relay:
         )
 
     def client_status(self) -> dict[str, Any]:
-        """The selected client's allowlist and command descriptors."""
+        """The selected client's allowlist and described command descriptors."""
         client = self._require_client()
         return {
             "ok": True,
             "client_id": client.client_id,
             "allowed": sorted(client.allowed),
-            "commands": [client.commands[key] for key in sorted(client.commands)],
+            "commands": [
+                {**descriptor, "description": _description(descriptor)}
+                for _, descriptor in sorted(client.commands.items())
+            ],
         }

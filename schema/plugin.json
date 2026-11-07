@@ -24,7 +24,10 @@
         "jupyterlab-commands-reference:open",
         "file:download",
         "workspace-ui:open",
-        "workspace-page:open"
+        "workspace-page:open",
+        "voice-capture:play-file",
+        "voice-capture:enable",
+        "voice-capture:disable"
       ]
     }
   },

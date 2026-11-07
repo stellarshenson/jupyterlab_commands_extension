@@ -2,6 +2,16 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## [1.1.20] - 2026-11-07
+
+### Added
+
+- Allow `voice-capture:play-file`, `voice-capture:enable` and `voice-capture:disable` in the default commands
+
+### Changed
+
+- Print each allowed command with its description in `jupyterlab-commands list` and `--list`
+
 ## [1.1.19] - 2026-11-05
 
 ### Added

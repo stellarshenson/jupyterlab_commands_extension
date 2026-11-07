@@ -172,3 +172,29 @@ async def test_client_status_reports_the_allowlist_and_commands():
         "docmanager:open",
         "help:open",
     ]
+
+
+@pytest.mark.asyncio
+async def test_client_status_describes_each_command_by_caption_else_label():
+    relay = Relay()
+    relay.register(
+        "browser-1",
+        [
+            {"id": "a:caption", "label": "Label", "caption": "Two\n  lines"},
+            {"id": "b:label", "label": "Label", "caption": ""},
+            {"id": "c:none"},
+            "d:id-only",
+        ],
+        [],
+    )
+
+    descriptions = {
+        entry["id"]: entry["description"]
+        for entry in relay.client_status()["commands"]
+    }
+    assert descriptions == {
+        "a:caption": "Two lines",
+        "b:label": "Label",
+        "c:none": "",
+        "d:id-only": "",
+    }

@@ -27,7 +27,10 @@ const DEFAULT_ALLOWED = [
   'jupyterlab-commands-reference:open',
   'file:download',
   'workspace-ui:open',
-  'workspace-page:open'
+  'workspace-page:open',
+  'voice-capture:play-file',
+  'voice-capture:enable',
+  'voice-capture:disable'
 ];
 
 /** Every variable that could let discovery reach the developer's own lab. */
@@ -177,9 +180,13 @@ test('--list names the default allowed commands and their arguments', async ({
   const plain = await runCli(['--list'], env);
   expect(plain.code).toBe(0);
   expectNoToken(plain);
-  expect(plain.stdout.trim().split('\n').sort()).toEqual(
-    [...DEFAULT_ALLOWED].sort()
-  );
+  expect(
+    plain.stdout
+      .trim()
+      .split('\n')
+      .map(line => line.split(/\s+/)[0])
+      .sort()
+  ).toEqual([...DEFAULT_ALLOWED].sort());
 
   const json = await runCli(['--list', '--json'], env);
   expect(json.code).toBe(0);

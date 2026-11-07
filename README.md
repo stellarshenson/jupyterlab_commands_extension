@@ -47,7 +47,7 @@ For a development install from a clone, run `make install`.
 JUPYTERLAB_COMMANDS_TOKEN=... jupyterlab-commands --url https://remote-host:8888 --list
 ```
 
-`jupyterlab-commands --help` and `jupyterlab-commands <command> --help` hold the full reference. The three subcommands are `list`, which prints the allowed command IDs, `execute`, which runs one allowed command, and `activity`. `--json` prints machine-readable output.
+`jupyterlab-commands --help` and `jupyterlab-commands <command> --help` hold the full reference. The three subcommands are `list`, which prints each allowed command ID with its description, `execute`, which runs one allowed command, and `activity`. `--json` prints machine-readable output.
 
 `activity` posts the current time to the JupyterHub activity route, the same write the single-user notifier makes. One call marks the server active once; the hub culls it as idle after its idle timeout counted from the last mark, so while work runs, repeat the call at an interval shorter than that timeout. It needs no browser tab, but it runs only in a lab started by JupyterHub: it posts `{"last_activity": TS, "servers": {JUPYTERHUB_SERVER_NAME: {"last_activity": TS}}}` to `JUPYTERHUB_ACTIVITY_URL` with the hub token from `JUPYTERHUB_API_TOKEN` or `JPY_API_TOKEN`, through no proxy and no redirect. The hub answers 200 even when the time does not move, because the route never moves time backwards. A hub refusal prints the hub message and exits 5. `--url` and `--token` do not apply to it.
 
@@ -71,7 +71,7 @@ Every execute request reaches the JupyterLab server log: the outcome, the comman
 
 ## Allowlist
 
-The `allowedCommands` setting holds the command IDs the CLI may run. The defaults are `docmanager:open`, `help:open`, `apputils:notify`, `notebook:create-new`, `console:create`, `terminal:create-new`, `launcher:create`, `jupyterlab-commands-reference:open`, `file:download`, `workspace-ui:open` and `workspace-page:open`.
+The `allowedCommands` setting holds the command IDs the CLI may run. The defaults are `docmanager:open`, `help:open`, `apputils:notify`, `notebook:create-new`, `console:create`, `terminal:create-new`, `launcher:create`, `jupyterlab-commands-reference:open`, `file:download`, `workspace-ui:open`, `workspace-page:open`, `voice-capture:play-file`, `voice-capture:enable` and `voice-capture:disable`.
 
 The **Add to command executor** button in the Command Executor column of the reference tab appends that command ID to the setting, and the button then shows **Added**. The setting can also be edited directly in **Settings > Settings Editor > Commands Executor**, whose plugin ID is `@stellarshenson/jupyterlab-commands-extension:plugin`.
 

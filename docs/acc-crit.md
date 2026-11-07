@@ -60,6 +60,12 @@ The `allowedCommands` setting: where it is edited, what it defaults to, and that
   - log: 2026-11-04T22:59:16Z @kj added
   - log: 2026-11-04T23:01:40Z @kj closed
   - log: 2026-11-04T23:13:27Z @kj edited evidence "schema/plugin.json default carries workspace-page:open; tests/test_schema.py::test_default_allowed_commands_include_workspace_page_open passed in pytest 144 passed, 1 deselected" -> "jupyterlab_commands_extension/tests/test_schema.py::test_default_allowed_commands_include_workspace_page_open passed in /home/lab/workspace/private/jupyterlab/jupyterlab_workspace_manager_extension/tmp/workflows/wm-page-policy/logs/close-commands-pytest.log (144 passed, 1 deselected); schema/plugin.json default carries workspace-page:open"
+- [x] `ACC-ALLOW-44-VOICE-CMDS` **Voice capture commands are allowed by default** - MEDIUM; voice-capture:play-file, voice-capture:enable and voice-capture:disable follow workspace-page:open at the end of the default allowedCommands, in that order; the schema test holds it
+  - evidence: jupyterlab_commands_extension/tests/test_schema.py::test_default_allowed_commands_end_with_the_voice_capture_commands failed on the old schema (/home/lab/workspace/private/jupyterlab/jupyterlab_voice_capture_extension/tmp/workflows/mic/logs/cmds-allow-red.log, 1 failed, 1 passed) and passed after (/home/lab/workspace/private/jupyterlab/jupyterlab_voice_capture_extension/tmp/workflows/mic/logs/cmds-allow-green.log, 2 passed); full suite /home/lab/workspace/private/jupyterlab/jupyterlab_voice_capture_extension/tmp/workflows/mic/logs/cmds-pytest-deselect.log 147 passed, 1 deselected
+  - test: assert the last three schema/plugin.json allowedCommands defaults are voice-capture:play-file, voice-capture:enable, voice-capture:disable
+  - test-tags: UNIT
+  - log: 2026-11-07T12:47:49Z @kj added
+  - log: 2026-11-07T12:48:02Z @kj closed: verified in 1.1.19 working tree
 
 ## Reference tab `PANEL`
 
@@ -122,6 +128,7 @@ The Commands Reference tab: its icon, its add button and the added state after a
 The `jupyterlab-commands` CLI: listing, executing, refusing, error codes and relay selection.
 
 - [x] `ACC-CLI-9-LIST` **List prints the allowed command ids** - HIGH; `jupyterlab-commands --list` prints one allowed command id per line, and `list` is an alias for the flag.
+  - overridden-by: ACC-CLI-45-LIST-DESC
   - evidence: logs/verify-pm-test.log:40-41 PASSED test_list_prints_the_allowed_commands and test_list_subcommand_is_an_alias_for_the_flag; logs/test-galata.log:170 passed the --list test
   - test: run `--list` and `list` against a registered tab and assert stdout is the allowed ids
   - test-tags: UNIT, E2E
@@ -227,6 +234,14 @@ The `jupyterlab-commands` CLI: listing, executing, refusing, error codes and rel
   - mechanism: 2026-10-28T14:59:16Z @kj the command resolves the path through the contents API and clicks a temporary anchor carrying the download attribute, the same lines as FileBrowserModel.download
   - log: 2026-10-28T14:59:16Z @kj added
   - log: 2026-10-28T16:01:17Z @kj closed
+- [x] `ACC-CLI-45-LIST-DESC` **List prints each allowed command with its description** - HIGH; list and --list print one line per allowed command: the id padded to the longest id, then its caption, else its label, or (not registered in the tab); a line over 80 columns has its description cut to end in ...; --json carries description beside args
+  - evidence: test_cli.py::test_list_prints_each_allowed_command_with_its_description, test_list_cuts_a_long_description_to_80_columns, test_list_subcommand_is_an_alias_for_the_flag and test_relay.py::test_client_status_describes_each_command_by_caption_else_label failed on the old code (/home/lab/workspace/private/jupyterlab/jupyterlab_voice_capture_extension/tmp/workflows/mic/logs/cmds-list-red.log, 4 failed) and pass in /home/lab/workspace/private/jupyterlab/jupyterlab_voice_capture_extension/tmp/workflows/mic/logs/cmds-pytest-deselect.log (147 passed, 1 deselected); /home/lab/workspace/private/jupyterlab/jupyterlab_voice_capture_extension/tmp/workflows/mic/logs/cmds-list-demo.log max line 80
+  - overrides: ACC-CLI-9-LIST - list lines now carry the description after the id
+  - test: run pytest test_cli.py list tests against a stub answer and test_relay.py with caption, label and bare commands
+  - test-tags: UNIT
+  - mechanism: 2026-11-07T12:47:49Z @kj Relay.client_status adds description, the caption else the label on one line, to each registered command; the CLI looks each allowed id up in commands
+  - log: 2026-11-07T12:47:49Z @kj added
+  - log: 2026-11-07T12:48:02Z @kj closed: verified in 1.1.19 working tree
 
 ## Authentication and token handling `GUARD`
 

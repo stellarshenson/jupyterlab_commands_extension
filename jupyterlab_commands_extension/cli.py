@@ -38,6 +38,9 @@ EXECUTE_TIMEOUT_S = 35
 # Audit context an execute request can carry.
 PURPOSE_WORD_LIMIT = 25
 
+# Terminal width one list line must fit.
+LIST_COLUMNS = 80
+
 EXIT_OK = 0
 EXIT_USAGE = 2
 EXIT_NO_CLIENT = 3
@@ -692,8 +695,20 @@ def _run_list(args: argparse.Namespace) -> int:
     if args.json:
         print(json.dumps(answer, sort_keys=True))
         return EXIT_OK
-    for command in answer.get("allowed", []):
-        print(command)
+    commands = {entry["id"]: entry for entry in answer.get("commands", [])}
+    allowed = answer.get("allowed", [])
+    width = max(map(len, allowed), default=0)
+    for command in allowed:
+        entry = commands.get(command)
+        if entry is None:
+            text = "(not registered in the tab)"
+        else:
+            text = entry.get("description", "")
+        line = f"{command:<{width}}  {text}".rstrip()
+        if len(line) > LIST_COLUMNS:
+            # Only the description is cut, never the id.
+            line = line[: max(LIST_COLUMNS - 3, width + 2)] + "..."
+        print(line)
     return EXIT_OK
 
 
@@ -773,8 +788,8 @@ def _add_common_options(parser: argparse.ArgumentParser, suppress: bool) -> None
         action="store_true",
         default=default_json,
         help=(
-            "print machine-readable JSON; with list, each command's argument "
-            "schema"
+            "print machine-readable JSON; with list, each command's "
+            "description and argument schema"
         ),
     )
 
@@ -797,8 +812,8 @@ def _build_parser() -> argparse.ArgumentParser:
         "--list",
         action="store_true",
         help=(
-            "list the command ids the browser allows; --json adds each "
-            "command's argument schema"
+            "list the command ids the browser allows, each with its "
+            "description; --json adds each command's argument schema"
         ),
     )
 
@@ -806,10 +821,13 @@ def _build_parser() -> argparse.ArgumentParser:
     subparsers.add_parser(
         "list",
         parents=[common],
-        help="list the allowed commands and their arguments",
+        help="list the allowed commands and their descriptions",
         description=(
-            "List the command ids the browser allows the CLI to run. --json "
-            "prints each allowed command with its argument schema."
+            "List the command ids the browser allows the CLI to run, one per "
+            "line, each with its description: the command's caption, else its "
+            "label. An id the tab does not register is marked as not "
+            "registered in the tab. --json prints each command with its "
+            "description and argument schema."
         ),
         epilog=LIST_EPILOG,
         formatter_class=argparse.RawDescriptionHelpFormatter,

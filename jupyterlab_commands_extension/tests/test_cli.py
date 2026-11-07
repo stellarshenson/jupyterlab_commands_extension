@@ -259,21 +259,49 @@ def test_a_token_an_http_header_cannot_carry_exits_2(stub, capsys, token):
     assert stub.requests == []
 
 
-def test_list_prints_the_allowed_commands(stub, capsys):
+def test_list_prints_each_allowed_command_with_its_description(stub, capsys):
     stub.responder = lambda path, body: (
         200,
         {
             "ok": True,
             "client_id": "browser",
-            "allowed": ["docmanager:open", "help:open"],
-            "commands": [],
+            "allowed": ["docmanager:open", "help:open", "voice-capture:enable"],
+            "commands": [
+                {"id": "docmanager:open", "description": "Open a file"},
+                {"id": "help:open", "description": "Help"},
+                {"id": "launcher:create", "description": "New Launcher"},
+            ],
         },
     )
 
     code = cli.main(["--url", _base_url(stub), "--list"])
 
     assert code == cli.EXIT_OK
-    assert capsys.readouterr().out == "docmanager:open\nhelp:open\n"
+    assert capsys.readouterr().out == (
+        "docmanager:open       Open a file\n"
+        "help:open             Help\n"
+        "voice-capture:enable  (not registered in the tab)\n"
+    )
+
+
+def test_list_cuts_a_long_description_to_80_columns(stub, capsys):
+    stub.responder = lambda path, body: (
+        200,
+        {
+            "ok": True,
+            "client_id": "browser",
+            "allowed": ["help:open"],
+            "commands": [{"id": "help:open", "description": "word " * 30}],
+        },
+    )
+
+    code = cli.main(["--url", _base_url(stub), "--list"])
+
+    assert code == cli.EXIT_OK
+    line = capsys.readouterr().out.rstrip("\n")
+    assert len(line) == 80
+    assert line.startswith("help:open  word word")
+    assert line.endswith("...")
 
 
 def test_list_subcommand_is_an_alias_for_the_flag(stub, capsys):
@@ -290,7 +318,7 @@ def test_list_subcommand_is_an_alias_for_the_flag(stub, capsys):
     code = cli.main(["--url", _base_url(stub), "list"])
 
     assert code == cli.EXIT_OK
-    assert capsys.readouterr().out == "help:open\n"
+    assert capsys.readouterr().out == "help:open  (not registered in the tab)\n"
 
 
 def test_no_registered_client_exits_3(stub, capsys):
