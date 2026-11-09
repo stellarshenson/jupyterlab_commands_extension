@@ -2,6 +2,12 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## [Unreleased]
+
+### Changed
+
+- Remove the `--list` flag; `jupyterlab-commands list` is the one route
+
 ## [1.1.21] - 2026-11-07
 
 ### Added

@@ -135,21 +135,27 @@ The Commands Reference tab: its icon, its add button and the added state after a
 
 The `jupyterlab-commands` CLI: listing, executing, refusing, error codes and relay selection.
 
-- [x] `ACC-CLI-9-LIST` **List prints the allowed command ids** - HIGH; `jupyterlab-commands --list` prints one allowed command id per line, and `list` is an alias for the flag.
+- [x] `ACC-CLI-9-LIST` **List prints the allowed command ids** - HIGH; `jupyterlab-commands list` prints one allowed command id per line.
   - overridden-by: ACC-CLI-45-LIST-DESC
-  - evidence: logs/verify-pm-test.log:40-41 PASSED test_list_prints_the_allowed_commands and test_list_subcommand_is_an_alias_for_the_flag; logs/test-galata.log:170 passed the --list test
-  - test: run `--list` and `list` against a registered tab and assert stdout is the allowed ids
+  - evidence: test_cli.py::test_list_prints_each_allowed_command_with_its_description and test_the_list_flag_is_gone pass; 105 passed in /home/lab/workspace/private/jupyterlab/jupyterlab_voice_capture_extension/tmp/workflows/release/logs/cli.log; the Galata spec 'list names the default allowed commands and their arguments' covers the subcommand
+  - test: run `jupyterlab-commands list` against a registered tab and assert stdout is the allowed ids
   - test-tags: UNIT, E2E
   - log: 2026-10-18T00:51:57Z @kj added
   - log: 2026-10-18T00:53:23Z @kj closed
   - log: 2026-10-19T19:37:14Z @kj coded LIST
-- [x] `ACC-CLI-10-LIST-JSON` **JSON list carries command arguments** - HIGH; `--list --json` returns `allowed` and one entry per command whose `args` describe the registry arguments, for example `path: string`.
-  - evidence: logs/test-galata.log:170 passed --list names the default allowed commands and their arguments; logs/verify-pm-test.log:10-19 Jest 3 suites and 13 tests passed with allowlist.ts at 100 percent lines
-  - test: run `--list --json` and assert allowed ids and the args of docmanager:open and apputils:notify
+  - log: 2026-11-09T07:17:27Z @kj amended text "`jupyterlab-commands --list` prints one allowed command id per line, and `list` is an alias for the flag." -> "`jupyterlab-commands list` prints one allowed command id per line."
+  - log: 2026-11-09T07:17:27Z @kj edited test "run `--list` and `list` against a registered tab and assert stdout is the allowed ids" -> "run `jupyterlab-commands list` against a registered tab and assert stdout is the allowed ids"
+  - log: 2026-11-09T07:17:27Z @kj edited evidence "logs/verify-pm-test.log:40-41 PASSED test_list_prints_the_allowed_commands and test_list_subcommand_is_an_alias_for_the_flag; logs/test-galata.log:170 passed the --list test" -> "test_cli.py::test_list_prints_each_allowed_command_with_its_description and test_the_list_flag_is_gone pass; 105 passed in /home/lab/workspace/private/jupyterlab/jupyterlab_voice_capture_extension/tmp/workflows/release/logs/cli.log; the Galata spec 'list names the default allowed commands and their arguments' covers the subcommand"
+- [x] `ACC-CLI-10-LIST-JSON` **JSON list carries command arguments** - HIGH; `jupyterlab-commands list --json` returns `allowed` and one entry per command whose `args` describe the registry arguments, for example `path: string`.
+  - evidence: test_cli.py::test_list_json_carries_each_allowed_commands_argument_schema passes; 105 passed and jlpm test 23 passed in /home/lab/workspace/private/jupyterlab/jupyterlab_voice_capture_extension/tmp/workflows/release/logs/cli.log
+  - test: run `jupyterlab-commands list --json` and assert allowed ids and the args of docmanager:open and apputils:notify
   - test-tags: UNIT, E2E
   - log: 2026-10-18T00:51:57Z @kj added
   - log: 2026-10-18T00:53:23Z @kj closed
   - log: 2026-10-19T19:37:14Z @kj coded LIST-JSON
+  - log: 2026-11-09T07:17:30Z @kj amended text "`--list --json` returns `allowed` and one entry per command whose `args` describe the registry arguments, for example `path: string`." -> "`jupyterlab-commands list --json` returns `allowed` and one entry per command whose `args` describe the registry arguments, for example `path: string`."
+  - log: 2026-11-09T07:17:30Z @kj edited test "run `--list --json` and assert allowed ids and the args of docmanager:open and apputils:notify" -> "run `jupyterlab-commands list --json` and assert allowed ids and the args of docmanager:open and apputils:notify"
+  - log: 2026-11-09T07:17:30Z @kj edited evidence "logs/test-galata.log:170 passed --list names the default allowed commands and their arguments; logs/verify-pm-test.log:10-19 Jest 3 suites and 13 tests passed with allowlist.ts at 100 percent lines" -> "test_cli.py::test_list_json_carries_each_allowed_commands_argument_schema passes; 105 passed and jlpm test 23 passed in /home/lab/workspace/private/jupyterlab/jupyterlab_voice_capture_extension/tmp/workflows/release/logs/cli.log"
 - [x] `ACC-CLI-11-EXECUTE` **Execute runs an allowed command** - CRITICAL; `jupyterlab-commands execute <id> --args <json>` runs the command in the registered tab, prints its result and exits 0.
   - evidence: logs/test-galata.log:182 passed execute runs an allowed command and refuses one outside the allowlist; logs/verify-pm-test.log:45 PASSED test_a_successful_execute_prints_the_data
   - test: register a tab, execute apputils:notify with a message and assert the notification appears and the exit code is 0
@@ -242,14 +248,16 @@ The `jupyterlab-commands` CLI: listing, executing, refusing, error codes and rel
   - mechanism: 2026-10-28T14:59:16Z @kj the command resolves the path through the contents API and clicks a temporary anchor carrying the download attribute, the same lines as FileBrowserModel.download
   - log: 2026-10-28T14:59:16Z @kj added
   - log: 2026-10-28T16:01:17Z @kj closed
-- [x] `ACC-CLI-45-LIST-DESC` **List prints each allowed command with its description** - HIGH; list and --list print one line per allowed command: the id padded to the longest id, then its caption, else its label, or (not registered in the tab); a line over 80 columns has its description cut to end in ...; --json carries description beside args
-  - evidence: test_cli.py::test_list_prints_each_allowed_command_with_its_description, test_list_cuts_a_long_description_to_80_columns, test_list_subcommand_is_an_alias_for_the_flag and test_relay.py::test_client_status_describes_each_command_by_caption_else_label failed on the old code (/home/lab/workspace/private/jupyterlab/jupyterlab_voice_capture_extension/tmp/workflows/mic/logs/cmds-list-red.log, 4 failed) and pass in /home/lab/workspace/private/jupyterlab/jupyterlab_voice_capture_extension/tmp/workflows/mic/logs/cmds-pytest-deselect.log (147 passed, 1 deselected); /home/lab/workspace/private/jupyterlab/jupyterlab_voice_capture_extension/tmp/workflows/mic/logs/cmds-list-demo.log max line 80
+- [x] `ACC-CLI-45-LIST-DESC` **List prints each allowed command with its description** - HIGH; list prints one line per allowed command: the id padded to the longest id, then its caption, else its label, or (not registered in the tab); a line over 80 columns has its description cut to end in ...; --json carries description beside args
+  - evidence: test_cli.py::test_list_prints_each_allowed_command_with_its_description and test_list_cuts_a_long_description_to_80_columns pass; 105 passed in /home/lab/workspace/private/jupyterlab/jupyterlab_voice_capture_extension/tmp/workflows/release/logs/cli.log
   - overrides: ACC-CLI-9-LIST - list lines now carry the description after the id
   - test: run pytest test_cli.py list tests against a stub answer and test_relay.py with caption, label and bare commands
   - test-tags: UNIT
   - mechanism: 2026-11-07T12:47:49Z @kj Relay.client_status adds description, the caption else the label on one line, to each registered command; the CLI looks each allowed id up in commands
   - log: 2026-11-07T12:47:49Z @kj added
   - log: 2026-11-07T12:48:02Z @kj closed: verified in 1.1.19 working tree
+  - log: 2026-11-09T07:17:33Z @kj amended text "list and --list print one line per allowed command: the id padded to the longest id, then its caption, else its label, or (not registered in the tab); a line over 80 columns has its description cut to end in ...; --json carries description beside args" -> "list prints one line per allowed command: the id padded to the longest id, then its caption, else its label, or (not registered in the tab); a line over 80 columns has its description cut to end in ...; --json carries description beside args"
+  - log: 2026-11-09T07:17:33Z @kj edited evidence "test_cli.py::test_list_prints_each_allowed_command_with_its_description, test_list_cuts_a_long_description_to_80_columns, test_list_subcommand_is_an_alias_for_the_flag and test_relay.py::test_client_status_describes_each_command_by_caption_else_label failed on the old code (/home/lab/workspace/private/jupyterlab/jupyterlab_voice_capture_extension/tmp/workflows/mic/logs/cmds-list-red.log, 4 failed) and pass in /home/lab/workspace/private/jupyterlab/jupyterlab_voice_capture_extension/tmp/workflows/mic/logs/cmds-pytest-deselect.log (147 passed, 1 deselected); /home/lab/workspace/private/jupyterlab/jupyterlab_voice_capture_extension/tmp/workflows/mic/logs/cmds-list-demo.log max line 80" -> "test_cli.py::test_list_prints_each_allowed_command_with_its_description and test_list_cuts_a_long_description_to_80_columns pass; 105 passed in /home/lab/workspace/private/jupyterlab/jupyterlab_voice_capture_extension/tmp/workflows/release/logs/cli.log"
 
 ## Authentication and token handling `GUARD`
 

@@ -108,7 +108,6 @@ Exit codes:
 
 LIST_EPILOG = """\
 Examples:
-  jupyterlab-commands --list
   jupyterlab-commands list --json
   JUPYTERLAB_COMMANDS_TOKEN=... jupyterlab-commands list \\
       --url https://remote-host:8888 --json
@@ -808,14 +807,6 @@ def _build_parser() -> argparse.ArgumentParser:
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     _add_common_options(parser, suppress=False)
-    parser.add_argument(
-        "--list",
-        action="store_true",
-        help=(
-            "list the command ids the browser allows, each with its "
-            "description; --json adds each command's argument schema"
-        ),
-    )
 
     subparsers = parser.add_subparsers(dest="subcommand", metavar="SUBCOMMAND")
     subparsers.add_parser(
@@ -878,12 +869,7 @@ def main(argv: list[str] | None = None) -> int:
     parser = _build_parser()
     args = parser.parse_args(argv)
     try:
-        if args.list and args.subcommand in ("execute", "activity"):
-            raise CliError(
-                f"--list cannot be combined with the {args.subcommand} subcommand",
-                EXIT_USAGE,
-            )
-        if args.list or args.subcommand == "list":
+        if args.subcommand == "list":
             return _run_list(args)
         if args.subcommand == "execute":
             return _run_execute(args)

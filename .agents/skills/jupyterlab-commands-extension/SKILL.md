@@ -12,13 +12,13 @@ Commands, flags, output, exit codes: `jupyterlab-commands --help`, `jupyterlab-c
 ## Rules
 
 - Never print the token. Do not put it in a command you show or log. The CLI reads it from the environment or the server record
-- Run `jupyterlab-commands --list` before `execute`; it prints each allowed command id with its description. The allowlist belongs to the browser tab; a command outside it fails with exit code 4
+- Run `jupyterlab-commands list` before `execute`; it prints each allowed command id with its description. The allowlist belongs to the browser tab; a command outside it fails with exit code 4
 - Every `execute` passes `--purpose` (at most 25 words) and `--owner` (agent or project name); the CLI treats both as optional, this skill does not
 - Ask the user before an action that cannot be undone, or that opens or edits their files. `execute` runs in their lab
 - Long output: pass `--json` and read the fields you need
 - `file:download` takes `path` relative to the server root, not the shell directory; the file lands in the download folder of the computer that runs the browser tab, not on the server
 - `file:download` exits 5 on a missing file or a directory; exit 0 means the browser download started, not that it finished
-- When `--list` lacks `file:download`, the saved allowlist predates the command; the user adds it with the Add to command executor button in the Commands Reference tab
+- When `list` lacks `file:download`, the saved allowlist predates the command; the user adds it with the Add to command executor button in the Commands Reference tab
 - `activity` marks the server active once; the hub culls it after its idle timeout counted from the last mark. While work the user asked for runs, repeat it at an interval the user names, shorter than that timeout; never loop without the user's word
 
 ## How-to

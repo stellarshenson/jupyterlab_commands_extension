@@ -213,7 +213,7 @@ def test_the_environment_token_reaches_the_request(stub, monkeypatch):
         {"ok": True, "client_id": "browser", "allowed": [], "commands": []},
     )
 
-    code = cli.main(["--url", _base_url(stub), "--list"])
+    code = cli.main(["--url", _base_url(stub), "list"])
 
     assert code == cli.EXIT_OK
     assert stub.requests[0]["authorization"] == "token ambient-token"
@@ -227,7 +227,7 @@ def test_an_explicit_token_overrides_the_environment(stub, monkeypatch):
     )
 
     code = cli.main(
-        ["--url", _base_url(stub), "--token", "explicit-token", "--list"]
+        ["--url", _base_url(stub), "--token", "explicit-token", "list"]
     )
 
     assert code == cli.EXIT_OK
@@ -274,7 +274,7 @@ def test_list_prints_each_allowed_command_with_its_description(stub, capsys):
         },
     )
 
-    code = cli.main(["--url", _base_url(stub), "--list"])
+    code = cli.main(["--url", _base_url(stub), "list"])
 
     assert code == cli.EXIT_OK
     assert capsys.readouterr().out == (
@@ -295,7 +295,7 @@ def test_list_cuts_a_long_description_to_80_columns(stub, capsys):
         },
     )
 
-    code = cli.main(["--url", _base_url(stub), "--list"])
+    code = cli.main(["--url", _base_url(stub), "list"])
 
     assert code == cli.EXIT_OK
     line = capsys.readouterr().out.rstrip("\n")
@@ -304,21 +304,11 @@ def test_list_cuts_a_long_description_to_80_columns(stub, capsys):
     assert line.endswith("...")
 
 
-def test_list_subcommand_is_an_alias_for_the_flag(stub, capsys):
-    stub.responder = lambda path, body: (
-        200,
-        {
-            "ok": True,
-            "client_id": "browser",
-            "allowed": ["help:open"],
-            "commands": [],
-        },
-    )
+def test_the_list_flag_is_gone():
+    with pytest.raises(SystemExit) as exit_info:
+        cli.main(["--list"])
 
-    code = cli.main(["--url", _base_url(stub), "list"])
-
-    assert code == cli.EXIT_OK
-    assert capsys.readouterr().out == "help:open  (not registered in the tab)\n"
+    assert exit_info.value.code == 2
 
 
 def test_no_registered_client_exits_3(stub, capsys):
@@ -602,7 +592,7 @@ def test_an_explicit_url_matches_a_listed_record_and_uses_its_token(
     )
 
     code = cli.main(
-        ["--url", f"http://localhost:{stub.server_address[1]}", "--list"]
+        ["--url", f"http://localhost:{stub.server_address[1]}", "list"]
     )
 
     assert code == cli.EXIT_OK
@@ -647,7 +637,7 @@ def test_a_typed_base_path_ending_in_lab_matches_the_record_before_stripping(
         {"ok": True, "client_id": "browser", "allowed": [], "commands": []},
     )
 
-    code = cli.main(["--url", _base_url(stub) + typed_path, "--list"])
+    code = cli.main(["--url", _base_url(stub) + typed_path, "list"])
 
     assert code == cli.EXIT_OK
     request = stub.requests[0]
@@ -667,7 +657,7 @@ def test_a_remote_url_keeps_its_address_and_gets_no_ambient_token(monkeypatch):
 
     monkeypatch.setattr(cli, "_post", fake_post)
 
-    code = cli.main(["--url", "http://192.0.2.10:8888", "--list"])
+    code = cli.main(["--url", "http://192.0.2.10:8888", "list"])
 
     assert code == cli.EXIT_OK
     assert captured == {
@@ -690,7 +680,7 @@ def test_the_dedicated_token_reaches_a_remote_target(monkeypatch):
 
     monkeypatch.setattr(cli, "_post", fake_post)
 
-    code = cli.main(["--url", "http://192.0.2.10:8888", "--list"])
+    code = cli.main(["--url", "http://192.0.2.10:8888", "list"])
 
     assert code == cli.EXIT_OK
     assert captured["token"] == "remote-token"
@@ -708,7 +698,7 @@ def test_the_dedicated_token_beats_a_listed_record(stub, tmp_path, monkeypatch):
         {"ok": True, "client_id": "browser", "allowed": [], "commands": []},
     )
 
-    code = cli.main(["--url", _base_url(stub), "--list"])
+    code = cli.main(["--url", _base_url(stub), "list"])
 
     assert code == cli.EXIT_OK
     assert stub.requests[0]["authorization"] == "token dedicated-token"
@@ -930,7 +920,7 @@ def test_a_legacy_local_spelling_bypasses_the_proxy(
         monkeypatch.delenv("NO_PROXY", raising=False)
 
         code = cli.main(
-            ["--url", f"http://{spelling}:{stub.server_address[1]}", "--list"]
+            ["--url", f"http://{spelling}:{stub.server_address[1]}", "list"]
         )
 
         assert code == cli.EXIT_OK
@@ -1045,7 +1035,7 @@ def test_list_json_carries_each_allowed_commands_argument_schema(stub, capsys):
         },
     )
 
-    code = cli.main(["--url", _base_url(stub), "--list", "--json"])
+    code = cli.main(["--url", _base_url(stub), "list", "--json"])
 
     assert code == cli.EXIT_OK
     answer = json.loads(capsys.readouterr().out)
