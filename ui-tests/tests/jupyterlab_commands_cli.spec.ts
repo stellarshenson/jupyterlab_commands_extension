@@ -28,10 +28,9 @@ const DEFAULT_ALLOWED = [
   'file:download',
   'workspace-ui:open',
   'workspace-page:open',
-  'voice-capture:play-file',
   'voice-capture:enable',
   'voice-capture:disable',
-  'voice-capture:stop-playback'
+  'voice-capture:player'
 ];
 
 /** Every variable that could let discovery reach the developer's own lab. */
@@ -155,7 +154,7 @@ async function waitForRegistration(page: any): Promise<void> {
   await registered;
 }
 
-test('--list names the default allowed commands and their arguments', async ({
+test('list names the default allowed commands and their arguments', async ({
   page
 }) => {
   // Fails if the CLI stops reading the relay allowlist, or if command
@@ -178,7 +177,7 @@ test('--list names the default allowed commands and their arguments', async ({
   }, DEFAULT_ALLOWED);
   await registered;
 
-  const plain = await runCli(['--list'], env);
+  const plain = await runCli(['list'], env);
   expect(plain.code).toBe(0);
   expectNoToken(plain);
   expect(
@@ -189,7 +188,7 @@ test('--list names the default allowed commands and their arguments', async ({
       .sort()
   ).toEqual([...DEFAULT_ALLOWED].sort());
 
-  const json = await runCli(['--list', '--json'], env);
+  const json = await runCli(['list', '--json'], env);
   expect(json.code).toBe(0);
   expectNoToken(json);
   const listing = JSON.parse(json.stdout);

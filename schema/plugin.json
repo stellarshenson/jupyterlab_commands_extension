@@ -25,10 +25,9 @@
         "file:download",
         "workspace-ui:open",
         "workspace-page:open",
-        "voice-capture:play-file",
         "voice-capture:enable",
         "voice-capture:disable",
-        "voice-capture:stop-playback"
+        "voice-capture:player"
       ]
     }
   },

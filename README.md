@@ -44,7 +44,7 @@ For a development install from a clone, run `make install`.
 `jupyterlab-commands` runs in a terminal of the lab. It finds the running Jupyter server, selects the most recently registered browser tab with the extension active, and asks that tab to run one command. Discovery uses the loopback address by default, and loopback requests bypass any proxy. An explicit `--url` with `JUPYTERLAB_COMMANDS_TOKEN` set reaches a remote server. The token is sent in the Authorization header and is never printed.
 
 ```bash
-JUPYTERLAB_COMMANDS_TOKEN=... jupyterlab-commands --url https://remote-host:8888 --list
+JUPYTERLAB_COMMANDS_TOKEN=... jupyterlab-commands --url https://remote-host:8888 list
 ```
 
 `jupyterlab-commands --help` and `jupyterlab-commands <command> --help` hold the full reference. The three subcommands are `list`, which prints each allowed command ID with its description, `execute`, which runs one allowed command, and `activity`. `--json` prints machine-readable output.
@@ -71,7 +71,7 @@ Every execute request reaches the JupyterLab server log: the outcome, the comman
 
 ## Allowlist
 
-The `allowedCommands` setting holds the command IDs the CLI may run. The defaults are `docmanager:open`, `help:open`, `apputils:notify`, `notebook:create-new`, `console:create`, `terminal:create-new`, `launcher:create`, `jupyterlab-commands-reference:open`, `file:download`, `workspace-ui:open`, `workspace-page:open`, `voice-capture:play-file`, `voice-capture:enable`, `voice-capture:disable` and `voice-capture:stop-playback`.
+The `allowedCommands` setting holds the command IDs the CLI may run. The defaults are `docmanager:open`, `help:open`, `apputils:notify`, `notebook:create-new`, `console:create`, `terminal:create-new`, `launcher:create`, `jupyterlab-commands-reference:open`, `file:download`, `workspace-ui:open`, `workspace-page:open`, `voice-capture:enable`, `voice-capture:disable` and `voice-capture:player`.
 
 The **Add to command executor** button in the Command Executor column of the reference tab appends that command ID to the setting, and the button then shows **Added**. The setting can also be edited directly in **Settings > Settings Editor > Commands Executor**, whose plugin ID is `@stellarshenson/jupyterlab-commands-extension:plugin`.
 
