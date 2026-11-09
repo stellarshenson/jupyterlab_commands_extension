@@ -20,6 +20,12 @@ The browser test server used by the Galata suite: fixture directories, teardown 
   - log: 2026-10-18T01:49:37Z @kj amended text "every Galata teardown DELETE answers 400 `send2trash failed: [Errno 13] Permission denied: b'/.Trash-1000'` while the six tests still pass; cause: the container has no writable trash directory; fix: pending, set `ContentsManager.use_trash = False` in the Galata test server config; `ui-tests/jupyter_server_test_config.py`." -> "every Galata teardown DELETE answered 400 send2trash failed: [Errno 13] Permission denied on /.Trash-1000 while the six tests passed; cause: the container has no writable trash directory and the image config enables trash for the concrete contents manager; fix: ui-tests/jupyter_server_test_config.py sets delete_to_trash False on ContentsManager and AsyncLargeFileManager."
   - log: 2026-10-18T01:49:41Z @kj closed
   - log: 2026-10-19T19:37:14Z @kj coded TRASH
+- [x] `DEF-GALATA-16-SPEC-SAVE` **Galata spec drops the file content on save** - MINOR; jupyterlab_commands_cli.spec.ts called contents.save with the removed three-argument form so the payload never left the browser and the test passed only through the upload branch
+  - evidence: ui-tests/tests/jupyterlab_commands_cli.spec.ts now calls app.serviceManager.contents.save(file, {type: 'file', format: 'text', content: 'cli download e2e payload'}), the save(path, options?) shape of @jupyterlab/services 7.6.x; the CLI spec in the bubblewrap sandbox after trash-put of the leftover scratch cli-download-4f7e.csv reports 5 passed, 0 failed (20.9s), and the server log shows 'Uploading file to /cli-download-4f7e.csv'
+  - repro: keep a cli-download-4f7e.csv in the sandbox scratch root, run the CLI spec, and file:download fails with 400 No file content provided
+  - test-tags: E2E
+  - log: 2026-11-09T08:42:16Z @kj added
+  - log: 2026-11-09T08:49:22Z @kj closed
 
 ## Authentication and token handling `GUARD`
 
@@ -158,3 +164,16 @@ README and CLI help text that documents installation and operation
   - root-cause: 2026-10-19T19:51:55Z @kj the round 1 fix corrected SKILL.md only; the same false sentence stayed in the activity subparser description in cli.py and in README.md line 52
   - log: 2026-10-19T19:51:55Z @kj added
   - log: 2026-10-19T19:52:02Z @kj closed: fixed: activity description and README.md line 52 reworded
+
+## Build and release tooling `BUILD`
+
+Build, test and release tooling: the Makefile targets and the release path.
+
+- log: 2026-11-09T07:58:13Z @kj category created
+
+- [x] `DEF-BUILD-15-PUBLISH-ORDER` **make publish runs test before install** - MAJOR; make publish depends on test then install, and test_skill compares the installed agent skill with the repository copy, so a release that changes the skill fails its own gate; observed at 1.1.22: publish stopped at test with nothing bumped or published, and the release finished by hand with make install BUMP=patch, make test, then the metadata commit, push, npm publish and twine upload
+  - evidence: Makefile 1.49: publish is `check_dependencies install test`; jupyterlab_commands_extension/Makefile is identical to @utils/jupyterlab-extensions/Makefile; prove.json red-then-green: parity test test_installed_skill_matches_the_repository_copy failed before install (1 failed, 147 passed via make test) and passed after make install BUMP=none (148 passed)
+  - repro: change .agents/skills/<skill>/SKILL.md, then run make publish BUMP=patch: test fails on test_installed_skill_matches_the_repository_copy before install refreshes the installed copy
+  - test-tags: UNIT
+  - log: 2026-11-09T07:58:13Z @kj added; reason: the body carries both the 1.1.22 observation and the manual recovery, which the release trail needs
+  - log: 2026-11-09T08:16:09Z @kj closed: fixed: make publish runs install then test in Makefile 1.49, both copies; parity test red before install, green after

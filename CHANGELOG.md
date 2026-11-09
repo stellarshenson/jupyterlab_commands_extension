@@ -2,10 +2,22 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
-## [Unreleased]
+## [1.1.23] - 2026-11-09
 
 ### Changed
 
+- `make publish` installs the built wheel before it runs the suite, so a release that changes the shipped agent skill passes its own gate (Makefile 1.49)
+
+### Fixed
+
+- The Galata CLI spec sends the download payload inside `contents.save`'s options object, so `file:download` receives real content
+
+## [1.1.22] - 2026-11-09
+
+### Changed
+
+- Allow voice-capture:player in the default commands
+- Remove voice-capture:play-file and voice-capture:stop-playback from the default commands
 - Remove the `--list` flag; `jupyterlab-commands list` is the one route
 
 ## [1.1.21] - 2026-11-07

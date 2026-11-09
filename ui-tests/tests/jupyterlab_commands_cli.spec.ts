@@ -298,11 +298,11 @@ test('file:download downloads a file and reports a missing path', async ({
   const name = 'cli-download-4f7e.csv';
   await page.evaluate(async file => {
     const app = (window as any).jupyterapp;
-    await app.serviceManager.contents.save(
-      file,
-      { type: 'file', format: 'text' },
-      'cli download e2e payload'
-    );
+    await app.serviceManager.contents.save(file, {
+      type: 'file',
+      format: 'text',
+      content: 'cli download e2e payload'
+    });
   }, name);
 
   const downloadPromise = page.waitForEvent('download');

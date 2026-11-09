@@ -398,3 +398,16 @@ What the server writes to the JupyterLab log for each command execution
   - log: 2026-10-28T21:12:28Z @kj added
   - log: 2026-10-28T21:18:11Z @kj closed
 
+## Build and release tooling `BUILD`
+
+Build, test and release tooling: the Makefile targets and the publish order
+
+- log: 2026-11-09T08:16:03Z @kj category created
+
+- [x] `ACC-BUILD-47-PUBLISH-ORDER` **publish installs before it runs the suite** - HIGH; make publish installs the built wheel before it runs the test suite, so a suite that compares the installed artifact with the repository copy passes on the release it installs; a red suite stops after the version bump and before any registry upload
+  - evidence: Makefile 1.49 in @utils/jupyterlab-extensions: publish depends on install then test; commands copy identical; make -n publish BUMP=patch prints pip install dist/*.whl before jlpm test and pytest; prove.json red-then-green: make test failed test_installed_skill_matches_the_repository_copy (1 failed, 147 passed), make install BUMP=none then make test passed 148
+  - test: append one line to the installed SKILL.md, run make test and assert test_installed_skill_matches_the_repository_copy fails; run make install BUMP=none, assert make test then passes 148 tests
+  - test-tags: UNIT
+  - log: 2026-11-09T08:16:03Z @kj added
+  - log: 2026-11-09T08:16:06Z @kj closed: verified: Makefile 1.49 publish order installed then tested, red-then-green in prove.json
+
