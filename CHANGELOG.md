@@ -2,6 +2,12 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## [1.1.24] - 2026-11-12
+
+### Changed
+
+- The default `allowedCommands` end with `audio:enable`, `audio:disable` and `audio:player` after the audio extension's rename; the README, the schema and CLI tests and the Galata spec follow
+
 ## [1.1.23] - 2026-11-09
 
 ### Changed

@@ -28,9 +28,9 @@ const DEFAULT_ALLOWED = [
   'file:download',
   'workspace-ui:open',
   'workspace-page:open',
-  'voice-capture:enable',
-  'voice-capture:disable',
-  'voice-capture:player'
+  'audio:enable',
+  'audio:disable',
+  'audio:player'
 ];
 
 /** Every variable that could let discovery reach the developer's own lab. */

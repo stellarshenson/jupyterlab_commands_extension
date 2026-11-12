@@ -60,20 +60,24 @@ The `allowedCommands` setting: where it is edited, what it defaults to, and that
   - log: 2026-11-04T22:59:16Z @kj added
   - log: 2026-11-04T23:01:40Z @kj closed
   - log: 2026-11-04T23:13:27Z @kj edited evidence "schema/plugin.json default carries workspace-page:open; tests/test_schema.py::test_default_allowed_commands_include_workspace_page_open passed in pytest 144 passed, 1 deselected" -> "jupyterlab_commands_extension/tests/test_schema.py::test_default_allowed_commands_include_workspace_page_open passed in /home/lab/workspace/private/jupyterlab/jupyterlab_workspace_manager_extension/tmp/workflows/wm-page-policy/logs/close-commands-pytest.log (144 passed, 1 deselected); schema/plugin.json default carries workspace-page:open"
-- [x] `ACC-ALLOW-44-VOICE-CMDS` **Voice capture commands are allowed by default** - MEDIUM; voice-capture:play-file, voice-capture:enable and voice-capture:disable follow workspace-page:open at the end of the default allowedCommands, in that order; the schema test holds it
+- [-] `ACC-ALLOW-44-VOICE-CMDS` **Voice capture commands are allowed by default** - MEDIUM; voice-capture:play-file, voice-capture:enable and voice-capture:disable follow workspace-page:open at the end of the default allowedCommands, in that order; the schema test holds it
   - overridden-by: ACC-ALLOW-46-STOP-PLAYBACK
-  - evidence: jupyterlab_commands_extension/tests/test_schema.py::test_default_allowed_commands_end_with_the_voice_capture_commands failed on the old schema (/home/lab/workspace/private/jupyterlab/jupyterlab_voice_capture_extension/tmp/workflows/mic/logs/cmds-allow-red.log, 1 failed, 1 passed) and passed after (/home/lab/workspace/private/jupyterlab/jupyterlab_voice_capture_extension/tmp/workflows/mic/logs/cmds-allow-green.log, 2 passed); full suite /home/lab/workspace/private/jupyterlab/jupyterlab_voice_capture_extension/tmp/workflows/mic/logs/cmds-pytest-deselect.log 147 passed, 1 deselected
   - test: assert the last three schema/plugin.json allowedCommands defaults are voice-capture:play-file, voice-capture:enable, voice-capture:disable
   - test-tags: UNIT
   - log: 2026-11-07T12:47:49Z @kj added
   - log: 2026-11-07T12:48:02Z @kj closed: verified in 1.1.19 working tree
-- [x] `ACC-ALLOW-46-STOP-PLAYBACK` **voice-capture:stop-playback is allowed by default** - MEDIUM; voice-capture:stop-playback follows voice-capture:disable as the last default allowedCommands entry; the schema test holds it
-  - evidence: jupyterlab_commands_extension/tests/test_schema.py::test_default_allowed_commands_end_with_the_voice_capture_commands failed on the old schema (/home/lab/workspace/private/jupyterlab/jupyterlab_voice_capture_extension/tmp/workflows/stop/logs/cmds-allow-red.log, 1 failed, 1 passed) and passed after (/home/lab/workspace/private/jupyterlab/jupyterlab_voice_capture_extension/tmp/workflows/stop/logs/cmds-allow-green.log, 2 passed); full suite /home/lab/workspace/private/jupyterlab/jupyterlab_voice_capture_extension/tmp/workflows/stop/logs/cmds-pytest.log 148 passed
+  - log: 2026-11-12T08:26:24Z @kj rejected: the source rename replaced the default ids with audio:enable, audio:disable and audio:player; evidence retired: jupyterlab_commands_extension/tests/test_schema.py::test_default_allowed_commands_end_with_the_voice_capture_commands failed on the old schema (/home/lab/workspace/private/jupyterlab/jupyterlab_voice_capture_extension/tmp/workflows/mic/logs/cmds-allow-red.log, 1 failed, 1 passed) and passed after (/home/lab/workspace/private/jupyterlab/jupyterlab_voice_capture_extension/tmp/workflows/mic/logs/cmds-allow-green.log, 2 passed); full suite /home/lab/workspace/private/jupyterlab/jupyterlab_voice_capture_extension/tmp/workflows/mic/logs/cmds-pytest-deselect.log 147 passed, 1 deselected
+- [-] `ACC-ALLOW-46-STOP-PLAYBACK` **voice-capture:stop-playback is allowed by default** - MEDIUM; voice-capture:stop-playback follows voice-capture:disable as the last default allowedCommands entry; the schema test holds it
   - overrides: ACC-ALLOW-44-VOICE-CMDS - voice-capture:stop-playback now follows voice-capture:disable at the end of the defaults
   - test: assert the last four schema/plugin.json allowedCommands defaults are voice-capture:play-file, voice-capture:enable, voice-capture:disable, voice-capture:stop-playback
   - test-tags: UNIT
   - log: 2026-11-07T14:15:39Z @kj added
   - log: 2026-11-07T14:15:49Z @kj closed: verified in 1.1.20 working tree
+  - log: 2026-11-12T08:26:26Z @kj rejected: the source rename replaced the default ids with audio:enable, audio:disable and audio:player; evidence retired: jupyterlab_commands_extension/tests/test_schema.py::test_default_allowed_commands_end_with_the_voice_capture_commands failed on the old schema (/home/lab/workspace/private/jupyterlab/jupyterlab_voice_capture_extension/tmp/workflows/stop/logs/cmds-allow-red.log, 1 failed, 1 passed) and passed after (/home/lab/workspace/private/jupyterlab/jupyterlab_voice_capture_extension/tmp/workflows/stop/logs/cmds-allow-green.log, 2 passed); full suite /home/lab/workspace/private/jupyterlab/jupyterlab_voice_capture_extension/tmp/workflows/stop/logs/cmds-pytest.log 148 passed
+- [ ] `ACC-ALLOW-48-AUDIO-IDS` **Audio commands are allowed by default** - MEDIUM; the default allowedCommands end with audio:enable, audio:disable and audio:player, in that order; the schema test holds it
+  - test: assert the last three schema/plugin.json allowedCommands defaults are audio:enable, audio:disable and audio:player
+  - test-tags: UNIT
+  - log: 2026-11-12T08:26:22Z @kj added
 
 ## Reference tab `PANEL`
 

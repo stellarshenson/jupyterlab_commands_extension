@@ -265,7 +265,7 @@ def test_list_prints_each_allowed_command_with_its_description(stub, capsys):
         {
             "ok": True,
             "client_id": "browser",
-            "allowed": ["docmanager:open", "help:open", "voice-capture:enable"],
+            "allowed": ["docmanager:open", "help:open", "audio:enable"],
             "commands": [
                 {"id": "docmanager:open", "description": "Open a file"},
                 {"id": "help:open", "description": "Help"},
@@ -278,9 +278,9 @@ def test_list_prints_each_allowed_command_with_its_description(stub, capsys):
 
     assert code == cli.EXIT_OK
     assert capsys.readouterr().out == (
-        "docmanager:open       Open a file\n"
-        "help:open             Help\n"
-        "voice-capture:enable  (not registered in the tab)\n"
+        "docmanager:open  Open a file\n"
+        "help:open        Help\n"
+        "audio:enable     (not registered in the tab)\n"
     )
 
 
