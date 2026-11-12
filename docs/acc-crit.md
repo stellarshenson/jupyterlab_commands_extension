@@ -74,10 +74,12 @@ The `allowedCommands` setting: where it is edited, what it defaults to, and that
   - log: 2026-11-07T14:15:39Z @kj added
   - log: 2026-11-07T14:15:49Z @kj closed: verified in 1.1.20 working tree
   - log: 2026-11-12T08:26:26Z @kj rejected: the source rename replaced the default ids with audio:enable, audio:disable and audio:player; evidence retired: jupyterlab_commands_extension/tests/test_schema.py::test_default_allowed_commands_end_with_the_voice_capture_commands failed on the old schema (/home/lab/workspace/private/jupyterlab/jupyterlab_voice_capture_extension/tmp/workflows/stop/logs/cmds-allow-red.log, 1 failed, 1 passed) and passed after (/home/lab/workspace/private/jupyterlab/jupyterlab_voice_capture_extension/tmp/workflows/stop/logs/cmds-allow-green.log, 2 passed); full suite /home/lab/workspace/private/jupyterlab/jupyterlab_voice_capture_extension/tmp/workflows/stop/logs/cmds-pytest.log 148 passed
-- [ ] `ACC-ALLOW-48-AUDIO-IDS` **Audio commands are allowed by default** - MEDIUM; the default allowedCommands end with audio:enable, audio:disable and audio:player, in that order; the schema test holds it
+- [x] `ACC-ALLOW-48-AUDIO-IDS` **Audio commands are allowed by default** - MEDIUM; the default allowedCommands end with audio:enable, audio:disable and audio:player, in that order; the schema test holds it
+  - evidence: test_schema.py asserts the last three schema defaults are audio:enable, audio:disable and audio:player; pytest test_schema.py test_cli.py 107 passed; the Galata spec lists the same
   - test: assert the last three schema/plugin.json allowedCommands defaults are audio:enable, audio:disable and audio:player
   - test-tags: UNIT
   - log: 2026-11-12T08:26:22Z @kj added
+  - log: 2026-11-12T08:34:52Z @kj closed: shipped in 1.1.24
 
 ## Reference tab `PANEL`
 
