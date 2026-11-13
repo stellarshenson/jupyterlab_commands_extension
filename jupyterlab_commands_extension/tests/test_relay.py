@@ -8,8 +8,10 @@ from jupyterlab_commands_extension.relay import (
     CommandNotAllowedError,
     ExecutionFailedError,
     ExecutionTimeoutError,
+    CLIENT_EXPIRY_S,
     NoClientError,
     Relay,
+    UnknownClientError,
     UnknownCommandError,
     UnknownRequestError,
 )
@@ -198,3 +200,32 @@ async def test_client_status_describes_each_command_by_caption_else_label():
         "c:none": "",
         "d:id-only": "",
     }
+
+
+@pytest.mark.asyncio
+async def test_a_tab_that_stopped_polling_is_forgotten():
+    relay = Relay()
+    _register(relay, "open")
+    _register(relay, "closed")
+    relay._clients["closed"].seen -= CLIENT_EXPIRY_S + 1
+
+    # The closed tab registered last, yet the open tab receives requests.
+    assert relay.client.client_id == "open"
+    with pytest.raises(UnknownClientError):
+        await relay.next_request("closed", timeout=0.05)
+
+    relay._clients["open"].seen -= CLIENT_EXPIRY_S + 1
+    _register(relay, "reloaded")
+    assert list(relay._clients) == ["reloaded"]
+
+
+@pytest.mark.asyncio
+async def test_polling_keeps_a_tab_registered():
+    relay = Relay()
+    _register(relay)
+    relay._clients["browser-1"].seen -= CLIENT_EXPIRY_S - 1
+
+    assert await relay.next_request("browser-1", timeout=0.05) is None
+    relay._clients["browser-1"].seen -= CLIENT_EXPIRY_S - 1
+
+    assert relay.client is not None

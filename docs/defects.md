@@ -177,3 +177,38 @@ Build, test and release tooling: the Makefile targets and the release path.
   - test-tags: UNIT
   - log: 2026-11-09T07:58:13Z @kj added; reason: the body carries both the 1.1.22 observation and the manual recovery, which the release trail needs
   - log: 2026-11-09T08:16:09Z @kj closed: fixed: make publish runs install then test in Makefile 1.49, both copies; parity test red before install, green after
+
+## Command relay `RELAY`
+
+Defects of the browser relay client and the server relay that connect a tab to the CLI
+
+- log: 2026-11-13T06:59:06Z @kj category created
+
+- [x] `DEF-RELAY-17-REGISTER-RATE` **Every command state change uploads the whole registry** - MEDIUM; each open tab posts every command descriptor to register up to 4 times a second while the user moves between cells or tabs; cause commandChanged fires for state changes too and the relay re-registers on all of them; `src/relay.ts`
+  - evidence: state change re-registers at most once per 5 s, added or removed command after 250 ms; jest relay-restart.spec.ts 'RelayClient command changes'; Jest 24 green
+  - root-cause: 2026-11-13T07:03:10Z @kj RelayClient._onCommandsChanged ignored the change type, so the state changes JupyterLab signals on each cell move and tab switch re-registered like an added command
+  - repro: open a notebook, move the active cell with the arrow keys, watch POST jupyterlab-commands/api/register in the network panel
+  - test-tags: UNIT
+  - log: 2026-11-13T06:59:06Z @kj added
+  - log: 2026-11-13T07:03:11Z @kj closed
+- [x] `DEF-RELAY-18-STALE-CLIENTS` **Closed tabs stay registered forever** - MEDIUM; each page reload leaves one more client with its full command table in server memory until the server stops, and a closed tab that registered last stays selected so execute waits 30 s; cause Relay._clients is never pruned; `jupyterlab_commands_extension/relay.py`
+  - evidence: client silent for CLIENT_EXPIRY_S 90 s is dropped at register and at selection, newest open tab selected; test_relay.py test_a_tab_that_stopped_polling_is_forgotten and test_polling_keeps_a_tab_registered; pytest 150 green
+  - root-cause: 2026-11-13T07:03:11Z @kj Relay.register only added to _clients and _selected named the last id registered, with no record of when a tab last polled
+  - repro: reload the lab tab N times, then read len(relay._clients) on the server: N+1
+  - test-tags: UNIT
+  - log: 2026-11-13T06:59:06Z @kj added
+  - log: 2026-11-13T07:03:11Z @kj closed
+
+## Reference tab `PANEL`
+
+Defects of the commands reference tab
+
+- log: 2026-11-13T06:59:06Z @kj category created
+
+- [x] `DEF-PANEL-19-ARGS-SCAN` **Argument fill scans every row per command** - MINOR; opening the reference tab runs one full table scan with two selector queries per row for each command that describes arguments, about 900 x 900 queries; cause _updateArgsCell searches the rows by text; fix a map from command id to its cell; `src/widget.ts`
+  - evidence: _argsCells map from command id to its cell, filled in _renderTable; Galata 8 green
+  - root-cause: 2026-11-13T07:03:11Z @kj _updateArgsCell found the cell by comparing the first cell text of every row
+  - repro: open Show Commands Reference with the performance profiler recording; _updateArgsCell dominates the first second
+  - test-tags: UNIT
+  - log: 2026-11-13T06:59:06Z @kj added
+  - log: 2026-11-13T07:03:11Z @kj closed

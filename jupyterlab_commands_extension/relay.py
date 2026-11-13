@@ -9,6 +9,7 @@ Jupyter server, so the dictionaries need no lock.
 from __future__ import annotations
 
 import asyncio
+import time
 import uuid
 from dataclasses import dataclass, field
 from typing import Any
@@ -18,6 +19,11 @@ PENDING_TIMEOUT_S = 25.0
 
 # How long the relay waits for the browser to answer an execute request.
 EXECUTION_TIMEOUT_S = 30.0
+
+# A tab that neither registered nor polled for this long is closed. A live tab
+# polls every PENDING_TIMEOUT_S and is silent at most EXECUTION_TIMEOUT_S more
+# while it runs a command.
+CLIENT_EXPIRY_S = 90.0
 
 
 class RelayError(Exception):
@@ -107,6 +113,7 @@ class Client:
     commands: dict[str, dict[str, Any]]
     allowed: set[str]
     queue: asyncio.Queue = field(default_factory=asyncio.Queue)
+    seen: float = field(default_factory=time.monotonic)
 
 
 def _command_table(commands: Any) -> dict[str, dict[str, Any]]:
@@ -157,7 +164,19 @@ class Relay:
     def __init__(self) -> None:
         self._clients: dict[str, Client] = {}
         self._pending: dict[str, Request] = {}
-        self._selected: str | None = None
+
+    def _drop_closed_clients(self) -> None:
+        """Forget every tab that stopped polling, so closed tabs do not pile up."""
+        limit = time.monotonic() - CLIENT_EXPIRY_S
+        for client_id in [
+            key for key, client in self._clients.items() if client.seen < limit
+        ]:
+            del self._clients[client_id]
+
+    def _touch(self, client_id: str) -> None:
+        client = self._clients.get(client_id)
+        if client is not None:
+            client.seen = time.monotonic()
 
     def register(self, client_id: Any, commands: Any, allowed: Any) -> Client:
         """Register or refresh one browser tab and select it.
@@ -170,7 +189,10 @@ class Relay:
             raise BadRequestError("'client_id' must be a non-empty string")
         table = _command_table(commands)
         allowed_set = _allowed_set(allowed)
-        previous = self._clients.get(client_id)
+        self._drop_closed_clients()
+        # Removed and inserted again, so the dictionary order is the
+        # registration order and its last entry is the selected client.
+        previous = self._clients.pop(client_id, None)
         client = Client(
             client_id=client_id,
             commands=table,
@@ -178,15 +200,15 @@ class Relay:
             queue=previous.queue if previous is not None else asyncio.Queue(),
         )
         self._clients[client_id] = client
-        self._selected = client_id
         return client
 
     @property
     def client(self) -> Client | None:
-        """The client that receives requests, or None when none registered."""
-        if self._selected is None:
+        """The most recently registered open tab, or None when there is none."""
+        self._drop_closed_clients()
+        if not self._clients:
             return None
-        return self._clients.get(self._selected)
+        return next(reversed(self._clients.values()))
 
     def _require_client(self) -> Client:
         client = self.client
@@ -211,21 +233,30 @@ class Relay:
             raise UnknownClientError(
                 "this client id is not registered; register before polling"
             )
+        client.seen = time.monotonic()
         loop = asyncio.get_running_loop()
         deadline = loop.time() + timeout
-        while True:
-            remaining = deadline - loop.time()
-            if remaining <= 0:
-                return None
-            try:
-                request = await asyncio.wait_for(client.queue.get(), remaining)
-            except asyncio.TimeoutError:
-                return None
-            # A request stays in the queue after its execute call timed out
-            # or was cancelled; it must not run after the CLI reported failure.
-            if request.future.done():
-                continue
-            return request
+        try:
+            while True:
+                remaining = deadline - loop.time()
+                if remaining <= 0:
+                    return None
+                try:
+                    request = await asyncio.wait_for(
+                        client.queue.get(), remaining
+                    )
+                except asyncio.TimeoutError:
+                    return None
+                # A request stays in the queue after its execute call timed
+                # out or was cancelled; it must not run after the CLI
+                # reported failure.
+                if request.future.done():
+                    continue
+                return request
+        finally:
+            # The tab may have registered again during the wait, which
+            # replaced its Client object.
+            self._touch(client_id)
 
     async def execute(
         self,

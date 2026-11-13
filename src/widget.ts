@@ -19,6 +19,7 @@ export class CommandsReferenceWidget extends Widget {
   private _tbody!: HTMLTableSectionElement;
   private _commandsCache: ICommandInfo[] = [];
   private _argsCache: Map<string, string> = new Map();
+  private _argsCells: Map<string, HTMLElement> = new Map();
   private _trans: TranslationBundle;
 
   constructor(
@@ -178,19 +179,10 @@ export class CommandsReferenceWidget extends Widget {
    * Update a specific args cell in the table
    */
   private _updateArgsCell(commandId: string, argsStr: string): void {
-    const rows = Array.from(this._tbody.querySelectorAll('tr'));
-    for (const row of rows) {
-      const idCell = row.querySelector('td:first-child');
-      if (idCell && idCell.textContent === commandId) {
-        const argsCell = row.querySelector(
-          'td:nth-child(4)'
-        ) as HTMLElement | null;
-        if (argsCell) {
-          argsCell.textContent = argsStr;
-          argsCell.title = argsStr;
-        }
-        break;
-      }
+    const argsCell = this._argsCells.get(commandId);
+    if (argsCell) {
+      argsCell.textContent = argsStr;
+      argsCell.title = argsStr;
     }
   }
 
@@ -201,6 +193,7 @@ export class CommandsReferenceWidget extends Widget {
     while (this._tbody.firstChild) {
       this._tbody.removeChild(this._tbody.firstChild);
     }
+    this._argsCells.clear();
 
     for (const cmd of commands) {
       const row = document.createElement('tr');
@@ -229,6 +222,7 @@ export class CommandsReferenceWidget extends Widget {
       const cachedArgs = this._argsCache.get(cmd.id);
       argsCell.textContent = cachedArgs || cmd.args || '';
       argsCell.title = cachedArgs || cmd.args || '';
+      this._argsCells.set(cmd.id, argsCell);
       row.appendChild(argsCell);
 
       // Executor cell

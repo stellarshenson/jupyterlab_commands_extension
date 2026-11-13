@@ -23,6 +23,15 @@ const RETRY_DELAY_MS = 1000;
 const REGISTER_DEBOUNCE_MS = 250;
 
 /**
+ * How often a command state change may refresh the registration.
+ *
+ * JupyterLab signals a state change on every cell move and tab switch. Only
+ * an added or removed command changes what the CLI can run, so a state change
+ * re-registers at most this often: enough to keep the tab in use selected.
+ */
+const STATE_REFRESH_MS = 5000;
+
+/**
  * One command the Python relay asks this tab to run.
  */
 interface IRelayRequest {
@@ -52,6 +61,7 @@ export class RelayClient {
   private _registering = false;
   private _registerAgain = false;
   private _registerTimer: number | null = null;
+  private _registeredAt = 0;
 
   constructor(options: RelayClient.IOptions) {
     this._app = options.app;
@@ -111,8 +121,15 @@ export class RelayClient {
     void this._register();
   }
 
-  private _onCommandsChanged(): void {
+  private _onCommandsChanged(
+    _sender: unknown,
+    change: CommandRegistry.ICommandChangedArgs
+  ): void {
     if (this._disposed || this._registerTimer !== null) {
+      return;
+    }
+    const stateOnly = change.type !== 'added' && change.type !== 'removed';
+    if (stateOnly && Date.now() - this._registeredAt < STATE_REFRESH_MS) {
       return;
     }
     this._registerTimer = window.setTimeout(() => {
@@ -136,6 +153,7 @@ export class RelayClient {
       return;
     }
     this._registering = true;
+    this._registeredAt = Date.now();
     try {
       const commands = await collectCommandDescriptors(this._commands);
       if (this._disposed) {

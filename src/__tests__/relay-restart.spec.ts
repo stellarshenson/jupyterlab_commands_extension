@@ -94,3 +94,36 @@ describe('RelayClient.start', () => {
     expect(get).not.toHaveBeenCalled();
   });
 });
+
+describe('RelayClient command changes', () => {
+  it('re-registers for an added command but not for each state change', () => {
+    jest.useFakeTimers();
+    try {
+      const { relay, register } = makeProbe();
+      const client = relay as unknown as {
+        _registeredAt: number;
+        _onCommandsChanged: (sender: unknown, change: { type: string }) => void;
+      };
+      const change = (type: string) => {
+        client._onCommandsChanged(null, { type });
+        jest.advanceTimersByTime(1000);
+      };
+      // The real _register stamps the time; the mock does not.
+      client._registeredAt = Date.now();
+
+      change('many-changed');
+      change('changed');
+      expect(register).not.toHaveBeenCalled();
+
+      change('added');
+      expect(register).toHaveBeenCalledTimes(1);
+
+      jest.advanceTimersByTime(5000);
+      change('many-changed');
+      expect(register).toHaveBeenCalledTimes(2);
+      relay.dispose();
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+});
