@@ -2,6 +2,13 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## [1.1.26] - 2026-11-13
+
+### Changed
+
+- Skip the PayPal donate link in the link check
+- Limit relay registrations and drop closed tabs from the relay
+
 ## [1.1.24] - 2026-11-12
 
 ### Changed
